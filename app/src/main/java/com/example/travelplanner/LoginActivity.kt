@@ -23,7 +23,7 @@ class LoginActivity : AppCompatActivity() {
 
         val registerText: TextView = findViewById(R.id.register_now)
         registerText.setOnClickListener{
-            val intent = Intent(this, RegisterUser::class.java)
+            val intent = Intent(this, RegisterActivity::class.java)
             startActivity(intent)
         }
 

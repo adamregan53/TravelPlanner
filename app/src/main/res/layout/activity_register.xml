@@ -4,10 +4,10 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".RegisterUser">
+    tools:context=".RegisterActivity">
 
     <TextView
-        android:id="@+id/banner"
+        android:id="@+id/registerBanner"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="50dp"
@@ -32,7 +32,7 @@
         android:textSize="24sp"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/banner" />
+        app:layout_constraintTop_toTopOf="@+id/registerBanner" />
 
     <EditText
         android:id="@+id/lname_register"
