@@ -6,12 +6,12 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import android.widget.TextView
+import android.widget.Toast
 import com.example.travelplanner.databinding.ActivityPlaceBinding
 import com.google.firebase.firestore.GeoPoint
 
 class PlaceActivity : AppCompatActivity() {
 
-    private lateinit var binding: ActivityPlaceBinding
 
     @SuppressLint("SuspiciousIndentation")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -23,7 +23,11 @@ class PlaceActivity : AppCompatActivity() {
         val tripLongitude: Double = intent.getDoubleExtra("longitude", 0.0)
         val tripCoordinates: GeoPoint = GeoPoint(tripLatitude, tripLongitude)
 
-        val textString: TextView = findViewById<TextView>(R.id.test_text)
+        //Toast.makeText(this@PlaceActivity, "Place view for $tripCoordinates", Toast.LENGTH_SHORT).show()
+
+        val textString: TextView = findViewById(R.id.test_text)
+
+        textString.text = tripName
 
 
 

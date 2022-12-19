@@ -23,7 +23,6 @@ class TripsActivity : AppCompatActivity() {
 
     private lateinit var fStore: FirebaseFirestore
     private lateinit var auth: FirebaseAuth
-    //private lateinit var listView: ListView
 
     private lateinit var newRecyclerView: RecyclerView
     private lateinit var tripsList: ArrayList<TripDetails>
@@ -53,30 +52,35 @@ class TripsActivity : AppCompatActivity() {
                     newRecyclerView.setHasFixedSize(true)
 
                     for(document in result){
-                        Log.d(TAG, "${document.id} => ${document.data.get("trip_name")}")
-                        val tripName = document.data.get("trip_name").toString()
+                        Log.d(TAG, "${document.id} => ${document.data["trip_name"]}")
+                        val tripId = document.id
+                        val tripName = document.data["trip_name"].toString()
                         val tripCoordinates: GeoPoint = document.data.get("coordinates") as GeoPoint
-                        val tripDetail: TripDetails = TripDetails(tripName, tripCoordinates)
+                        val tripDetail = TripDetails(tripId, tripName, tripCoordinates)
                         tripsList.add(tripDetail)
                     }
 
-                    newRecyclerView.adapter = TripAdapter(tripsList)
+                    var adapter = TripAdapter(tripsList)
+                    newRecyclerView.adapter = adapter
+                    adapter.setOnItemClickListener(object: TripAdapter.onItemClickListener{
+                        override fun onItemClick(position: Int) {
+                            //Toast.makeText(this@TripsActivity, "You clicked on ${tripsList[position].trip_name}", Toast.LENGTH_SHORT).show()
+                            val tripId = tripsList[position].id
+                            val tripName = tripsList[position].name
+                            val coordinates = tripsList[position].coordinates
+                            Log.w(TAG, "tripName: $tripName, coordinates: $coordinates")
 
+                            val intent =Intent(this@TripsActivity, MapsActivity::class.java)
+                            intent.putExtra("tripId", tripId)
+                            intent.putExtra("tripName", tripName)
+                            intent.putExtra("latitude", coordinates.latitude)
+                            intent.putExtra("longitude", coordinates.longitude)
 
-                    /*
-                    listView.setOnItemClickListener{ parent: AdapterView<*>, view: View, position: Int, id: Long ->
-                        val tripName = tripsList[position].trip_name
-                        val coordinates = tripsList[position].coordinates
-                        Log.w(TAG, "tripName: $tripName, coordinates: $coordinates")
+                            startActivity(intent)
+                        }
 
-                        val intent = Intent(this, PlaceActivity::class.java)
-                        intent.putExtra("tripName", tripName)
-                        intent.putExtra("latitude", coordinates.latitude)
-                        intent.putExtra("longitude", coordinates.longitude)
+                    })
 
-                        startActivity(intent)
-
-                    }*/
                 }
                 .addOnFailureListener{
                     Log.w(TAG, "Error getting documents.")
