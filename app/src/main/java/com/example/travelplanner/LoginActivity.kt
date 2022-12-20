@@ -13,6 +13,7 @@ import com.google.firebase.ktx.Firebase
 
 class LoginActivity : AppCompatActivity() {
 
+    //auth is used to authenticate users for firebase
     private lateinit var auth: FirebaseAuth
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -37,6 +38,7 @@ class LoginActivity : AppCompatActivity() {
         val email: EditText = findViewById(R.id.email_login)
         val password: EditText = findViewById(R.id.password_login)
 
+        //if the input fields are empty notify user
         if(email.text.isEmpty() || password.text.isEmpty()){
             Toast.makeText(this, "Please fill in all fields", Toast.LENGTH_SHORT).show()
             return
@@ -45,11 +47,11 @@ class LoginActivity : AppCompatActivity() {
         val emailInput = email.text.toString()
         val passwordInput = password.text.toString()
 
+        //attempt to sign in users with provided details
         auth.signInWithEmailAndPassword(emailInput, passwordInput)
             .addOnCompleteListener(this) { task ->
                 if (task.isSuccessful) {
-                    // Sign in success, go to main activity
-
+                    // Sign in success, go to TripsActivity to display trips
                     val intent = Intent(this, TripsActivity::class.java)
                     startActivity(intent)
 

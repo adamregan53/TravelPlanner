@@ -6,17 +6,10 @@
     android:layout_height="match_parent"
     tools:context=".PlaceActivity">
 
-    <TextView
-        android:id="@+id/test_text"
+
+    <androidx.recyclerview.widget.RecyclerView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:textSize="30sp"
-        android:textColor="@color/white"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.442" />
+        android:layout_height="match_parent"
+        android:id="@+id/placeRecyclerView" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

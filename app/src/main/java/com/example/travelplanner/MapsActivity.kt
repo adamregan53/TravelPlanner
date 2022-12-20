@@ -2,6 +2,7 @@ package com.example.travelplanner
 
 import android.Manifest
 import android.content.ContentValues.TAG
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.Location
 import androidx.appcompat.app.AppCompatActivity
@@ -68,6 +69,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnRequestPermissio
     private lateinit var placeCoordinates: GeoPoint
     private lateinit var placeTypesArray: ArrayList<String>
     private lateinit var placeAddress: String
+    private lateinit var placeDetail: PlaceDetails
     private lateinit var placeDetailsArray: ArrayList<PlaceDetails>
 
     private lateinit var addBtn: Button
@@ -75,7 +77,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnRequestPermissio
 
     private lateinit var placeInfoLayout: CardView
     private lateinit var clearPlaceBtn: Button
-    private lateinit var listPlaceBtn: Button
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -86,14 +87,16 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnRequestPermissio
         tripId = intent.getStringExtra("tripId") as String
         tripName = intent.getStringExtra("tripName") as String
         tripLatitude = intent.getDoubleExtra("latitude", 0.0)
-        tripLongitude= intent.getDoubleExtra("longitude", 0.0)
-
+        tripLongitude = intent.getDoubleExtra("longitude", 0.0)
         placeDetailsArray = ArrayList()
 
         fStore = Firebase.firestore
         auth = Firebase.auth
         currentUserId = auth.currentUser?.uid.toString()
-        tripsReference = fStore.collection("users").document(currentUserId).collection("trips").document(tripId)
+        tripsReference = fStore.collection("users")
+            .document(currentUserId)
+            .collection("trips")
+            .document(tripId)
 
         //init buttons
         addBtn = findViewById(R.id.addBtn)
@@ -105,7 +108,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnRequestPermissio
         placeInfoLayout = findViewById(R.id.place_details_card)
         placeInfoLayout.visibility = View.INVISIBLE
         clearPlaceBtn = findViewById(R.id.cardbtn_clear)
-        listPlaceBtn = findViewById(R.id.list_places_btn)
 
         //Obtain the SupportMapFragment and get notified when the map is ready to be used.
         val mapFragment = supportFragmentManager
@@ -132,12 +134,21 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnRequestPermissio
 
         ))
 
-        autoCompleteFragment.setPlaceFields(listOf(Place.Field.ID, Place.Field.NAME, Place.Field.LAT_LNG, Place.Field.TYPES, Place.Field.ADDRESS, Place.Field.OPENING_HOURS))
+        //specifies the information the application will receive from the API
+        autoCompleteFragment.setPlaceFields(listOf(Place.Field.ID,
+            Place.Field.NAME,
+            Place.Field.LAT_LNG,
+            Place.Field.TYPES,
+            Place.Field.ADDRESS,
+            Place.Field.OPENING_HOURS)
+        )
 
         autoCompleteFragment.setOnPlaceSelectedListener(object : PlaceSelectionListener {
             override fun onPlaceSelected(place: Place) {
-                Log.i(TAG, "Place: ${place.name}, ${place.id}, ${place.latLng}, ${place.types}, ${place.address}")
-                Log.i(TAG, "Json: $place")
+                Log.i("Places", "Place: ${place.name}, ${place.id}, ${place.latLng}, ${place.types}, ${place.address}")
+                Log.i("Places", "Json: $place")
+
+                placeInfoLayout.visibility = View.INVISIBLE
 
                 placeName = place.name
                 placeId = place.id
@@ -146,8 +157,9 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnRequestPermissio
                 for(type in place.types){
                     placeTypesArray.add(type.toString())
                 }
-                placeAddress = Place.Field.ADDRESS.name
-                val placeDetail: PlaceDetails = PlaceDetails(placeName, placeId, placeCoordinates, placeTypesArray, placeAddress)
+                placeAddress = place.address
+                val placeDetail = PlaceDetails(placeName, placeId, placeCoordinates, placeTypesArray, placeAddress)
+
 
                 val placeLocation = LatLng(placeCoordinates.latitude, placeCoordinates.longitude)
                 var newPlaceMarker: Marker? = null
@@ -156,8 +168,9 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnRequestPermissio
                         .position(placeLocation)
                         .title(placeName)
                 )
-
-
+                val placeLatLng: LatLng = LatLng(placeCoordinates.latitude, placeCoordinates.longitude)
+                val location: CameraUpdate = CameraUpdateFactory.newLatLngZoom(placeLatLng, 16f)
+                map.animateCamera(location)
 
                 addBtn.visibility = View.VISIBLE
                 cancelBtn.visibility = View.VISIBLE
@@ -167,6 +180,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnRequestPermissio
                         .addOnSuccessListener{
                             Log.d(TAG, "Place Added Successfully")
                             Toast.makeText(applicationContext, "Place Added Successfully", Toast.LENGTH_SHORT).show()
+                            placeDetailsArray.add(placeDetail)
                             addBtn.visibility = View.INVISIBLE
                             cancelBtn.visibility = View.INVISIBLE
                         }
@@ -188,7 +202,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnRequestPermissio
             }
 
             override fun onError(status: Status) {
-                Log.i(TAG, "An error occurred: $status")
+                Log.i(TAG, "Could not find place: $status")
             }
         })
     }
@@ -225,9 +239,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnRequestPermissio
             placeInfoLayout.visibility = View.INVISIBLE
         }
 
-        listPlaceBtn.setOnClickListener{
-
-        }
 
     }
 
@@ -244,7 +255,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnRequestPermissio
                         placeTypesArray.add(type)
                     }
                     placeCoordinates = document.data["coordinates"] as GeoPoint
-                    val placeDetail: PlaceDetails = PlaceDetails(placeName, placeId, placeCoordinates, placeTypesArray, placeAddress)
+                    placeDetail = PlaceDetails(placeName, placeId, placeCoordinates, placeTypesArray, placeAddress)
                     placeDetailsArray.add(placeDetail)
                 }
 

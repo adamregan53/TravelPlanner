@@ -3,6 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     tools:context=".TripsActivity">
 
     <androidx.recyclerview.widget.RecyclerView
@@ -10,5 +11,12 @@
         android:layout_height="match_parent"
         android:id="@+id/recyclerView" />
 
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/new_trip_btn"
+        android:layout_margin="5dp"
+        android:text="Add New Trip"
+        app:layout_constraintBottom_toBottomOf="parent"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
