@@ -1,5 +1,7 @@
 package com.example.travelplanner;
 
+import android.content.ContentValues
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -25,8 +27,10 @@ class PlaceAdapter(private val placeDetailsList : ArrayList<PlaceDetails>) : Rec
     }
 
     override fun onBindViewHolder(holder: MyViewHolder, position: Int) {
+        Log.d(ContentValues.TAG, "PlaceAdapter: position " + position);
         val currentPlace = placeDetailsList[position]
-        holder
+        holder.placeName.text = currentPlace.name
+        holder.placeAddress.text = currentPlace.address
     }
 
     override fun getItemCount(): Int {

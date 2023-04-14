@@ -1,6 +1,8 @@
 package com.example.travelplanner
 
 import android.app.Activity
+import android.content.ContentValues.TAG
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -28,6 +30,7 @@ class TripAdapter(private val tripsList : ArrayList<TripDetails>) : RecyclerView
     }
 
     override fun onBindViewHolder(holder: MyViewHolder, position: Int) {
+        Log.d(TAG, "onBindViewHolder: position " + position);
         val currentTrip = tripsList[position]
         holder.tripTitle.text = currentTrip.name
     }

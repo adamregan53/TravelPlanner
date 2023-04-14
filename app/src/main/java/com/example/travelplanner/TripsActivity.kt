@@ -5,12 +5,8 @@ import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
-import android.view.View
-import android.widget.AdapterView
 import android.widget.Button
-import android.widget.ListView
 import android.widget.Toast
-import androidx.annotation.ContentView
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.firebase.auth.FirebaseAuth
@@ -47,13 +43,12 @@ class TripsActivity : AppCompatActivity() {
 
         newRecyclerView = findViewById(R.id.recyclerView)
 
-
         tripsList = arrayListOf<TripDetails>()
         newTripBtn = this.findViewById(R.id.new_trip_btn)
 
         retrieveTrips()
 
-    }
+    }//end onCreate()
 
 
     private fun retrieveTrips() {
@@ -70,6 +65,7 @@ class TripsActivity : AppCompatActivity() {
                         tripCoordinates = document.data.get("coordinates") as GeoPoint
                         val tripDetail = TripDetails(tripId, tripName, tripCoordinates)
                         tripsList.add(tripDetail)
+                        Log.w(TAG, "trips activity list: ${Singleton.myString}")
                     }
 
                     displayTrips()
@@ -82,14 +78,15 @@ class TripsActivity : AppCompatActivity() {
         }else{
             Toast.makeText(this, "No trips available", Toast.LENGTH_SHORT).show()
         }
-    }
+    }//end retrieveTrips()
+
+
 
     private fun displayTrips() {
 
         newRecyclerView.layoutManager = LinearLayoutManager(this)
-        newRecyclerView.setHasFixedSize(true)
 
-        //custome adapter for TripDetails data class
+        //custom adapter for TripDetails data class
         var adapter = TripAdapter(tripsList)
         newRecyclerView.adapter = adapter
         adapter.setOnItemClickListener(object: TripAdapter.onItemClickListener{
@@ -98,17 +95,20 @@ class TripsActivity : AppCompatActivity() {
                 val tripId = tripsList[position].id
                 val tripName = tripsList[position].name
                 val coordinates = tripsList[position].coordinates
-                Log.w(TAG, "tripName: $tripName, coordinates: $coordinates")
+                Log.w(TAG, "tripId: $tripId, tripName: $tripName, coordinates: $coordinates")
 
-                val intent =Intent(this@TripsActivity, MapsActivity::class.java)
+
+                val intent =Intent(this@TripsActivity, PlaceActivity::class.java)
                 intent.putExtra("tripId", tripId)
+                /*
                 intent.putExtra("tripName", tripName)
                 intent.putExtra("latitude", coordinates.latitude)
                 intent.putExtra("longitude", coordinates.longitude)
-
+                */
                 startActivity(intent)
             }
 
-        })    }
+        })
+    }//end displayTrips()
 
-}
+}//end class

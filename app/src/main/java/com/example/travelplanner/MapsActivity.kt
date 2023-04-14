@@ -85,9 +85,18 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnRequestPermissio
         setContentView(binding.root)
 
         tripId = intent.getStringExtra("tripId") as String
+        /*
         tripName = intent.getStringExtra("tripName") as String
         tripLatitude = intent.getDoubleExtra("latitude", 0.0)
         tripLongitude = intent.getDoubleExtra("longitude", 0.0)
+        */
+
+        /*
+        tripName = myApplication.tripsList[position].name
+        tripLatitude = myApplication.tripsList[position].coordinates.latitude
+        tripLongitude = myApplication.tripsList[position].coordinates.latitude
+        */
+
         placeDetailsArray = ArrayList()
 
         fStore = Firebase.firestore
@@ -251,8 +260,9 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnRequestPermissio
                     placeId = document.id
                     placeAddress = document.data["address"].toString()
                     placeTypesArray = ArrayList()
-                    for(type in placeTypesArray){
-                        placeTypesArray.add(type)
+                    val arrayTypes = document.data["types"] as ArrayList<*>
+                    for(type in arrayTypes){
+                        placeTypesArray.add(type.toString())
                     }
                     placeCoordinates = document.data["coordinates"] as GeoPoint
                     placeDetail = PlaceDetails(placeName, placeId, placeCoordinates, placeTypesArray, placeAddress)

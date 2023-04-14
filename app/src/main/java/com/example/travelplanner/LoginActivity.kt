@@ -52,8 +52,10 @@ class LoginActivity : AppCompatActivity() {
             .addOnCompleteListener(this) { task ->
                 if (task.isSuccessful) {
                     // Sign in success, go to TripsActivity to display trips
+
                     val intent = Intent(this, TripsActivity::class.java)
                     startActivity(intent)
+
 
                     Toast.makeText(baseContext, "Welcome ", Toast.LENGTH_SHORT).show()
                 } else {
