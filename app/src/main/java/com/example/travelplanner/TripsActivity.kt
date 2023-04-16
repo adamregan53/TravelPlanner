@@ -1,5 +1,6 @@
 package com.example.travelplanner
 
+import android.content.ContentValues
 import android.content.ContentValues.TAG
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
@@ -31,7 +32,6 @@ class TripsActivity : AppCompatActivity() {
     private lateinit var tripsList: ArrayList<TripDetails>
 
     private lateinit var newTripBtn: Button
-    private lateinit var viewTripBtn: Button
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -43,7 +43,8 @@ class TripsActivity : AppCompatActivity() {
 
         newRecyclerView = findViewById(R.id.recyclerView)
 
-        tripsList = arrayListOf<TripDetails>()
+        //tripsList = arrayListOf<TripDetails>()
+        tripsList = Singleton.tripsList
         newTripBtn = this.findViewById(R.id.new_trip_btn)
 
         retrieveTrips()
@@ -52,9 +53,11 @@ class TripsActivity : AppCompatActivity() {
 
 
     private fun retrieveTrips() {
-        if(tripsList.isEmpty()){
+        if(Singleton.tripsList.isEmpty()){
             //reference to user document in database
-            val userReference: DocumentReference = fStore.collection("users").document(currentUserId.toString())
+            Log.d(ContentValues.TAG, "tripsList isEmpty: ${Singleton.tripsList.isEmpty()}");
+
+            val userReference: DocumentReference = fStore.collection("users").document(currentUserId)
             userReference.collection("trips").get()
                 .addOnSuccessListener { result ->
                     //get data from documents in trips collection
@@ -62,11 +65,12 @@ class TripsActivity : AppCompatActivity() {
                         Log.d(TAG, "${document.id} => ${document.data["trip_name"]}")
                         tripId = document.id
                         tripName = document.data["trip_name"].toString()
-                        tripCoordinates = document.data.get("coordinates") as GeoPoint
+                        tripCoordinates = document.data["coordinates"] as GeoPoint
                         val tripDetail = TripDetails(tripId, tripName, tripCoordinates)
                         tripsList.add(tripDetail)
-                        Log.w(TAG, "trips activity list: ${Singleton.myString}")
                     }
+
+                    Log.w(TAG, "Retrieved trips from Firebase")
 
                     displayTrips()
 
@@ -76,8 +80,19 @@ class TripsActivity : AppCompatActivity() {
                     Toast.makeText(applicationContext, "Failure", Toast.LENGTH_LONG).show()
                 }
         }else{
-            Toast.makeText(this, "No trips available", Toast.LENGTH_SHORT).show()
+            //Toast.makeText(this, "No trips available", Toast.LENGTH_SHORT).show()
+            for(trip in tripsList){
+                tripId = trip.id
+                tripName = trip.name
+                tripCoordinates = trip.coordinates
+            }
+            Log.w(TAG, "Retrieved trips from Singleton")
+
+            displayTrips()
         }
+
+
+
     }//end retrieveTrips()
 
 

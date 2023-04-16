@@ -62,6 +62,16 @@ class PlaceActivity : AppCompatActivity() {
 
         placeDetailsArray = arrayListOf<PlaceDetails>()
 
+        val singleton: Singleton = Singleton
+        var tripIdInt: Int = 0
+        for ((i, trip) in singleton.tripsList.withIndex()){
+            if (trip.id == tripId){
+                tripIdInt = i
+            }
+        }
+        Log.d(ContentValues.TAG, "Singleton Test: ${singleton.tripsList[tripIdInt].name}");
+
+
         retrievePlaces()
 
 

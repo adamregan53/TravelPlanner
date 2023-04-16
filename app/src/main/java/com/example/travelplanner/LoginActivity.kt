@@ -73,4 +73,4 @@ class LoginActivity : AppCompatActivity() {
     }
 
 
-}
+}//end class
