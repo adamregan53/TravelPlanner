@@ -6,10 +6,23 @@ import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
+import android.view.LayoutInflater
+import android.view.MenuItem
+import android.view.View
+import android.view.View.inflate
 import android.widget.Button
+import android.widget.TextView
 import android.widget.Toast
+import android.widget.Toolbar
+import androidx.appcompat.app.ActionBarDrawerToggle
+import androidx.appcompat.resources.Compatibility.Api21Impl.inflate
+import androidx.core.view.GravityCompat
+import androidx.drawerlayout.widget.DrawerLayout
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.example.travelplanner.databinding.ActivityLoginBinding.inflate
+import com.google.android.material.navigation.NavigationBarItemView
+import com.google.android.material.navigation.NavigationView
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.DocumentReference
@@ -17,8 +30,10 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.GeoPoint
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
+import org.w3c.dom.Text
+import java.util.zip.Inflater
 
-class TripsActivity : AppCompatActivity() {
+class TripsActivity : AppCompatActivity(){//end class
 
     private lateinit var fStore: FirebaseFirestore
     private lateinit var auth: FirebaseAuth
@@ -32,6 +47,11 @@ class TripsActivity : AppCompatActivity() {
     private lateinit var tripsList: ArrayList<TripDetails>
 
     private lateinit var newTripBtn: Button
+
+    private lateinit var drawerLayout:DrawerLayout
+    private lateinit var navigationView: NavigationView
+    private lateinit var toolbar: Toolbar
+    private lateinit var actionBarDrawerToggle: ActionBarDrawerToggle
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -47,15 +67,52 @@ class TripsActivity : AppCompatActivity() {
         tripsList = Singleton.tripsList
         newTripBtn = this.findViewById(R.id.new_trip_btn)
 
+        drawerLayout = findViewById(R.id.drawer_layout)
+        navigationView = findViewById(R.id.navigation_view)
+        actionBarDrawerToggle = ActionBarDrawerToggle(this, drawerLayout, R.string.menu_Open, R.string.close_menu)
+        drawerLayout.addDrawerListener(actionBarDrawerToggle)
+        actionBarDrawerToggle.syncState()
+        navigationView.setNavigationItemSelectedListener { item ->
+            when(item.itemId){
+                R.id.nav_home -> {
+                    Log.d("MENU_DRAWER_TAG", "Home Item Selected");
+                    drawerLayout.closeDrawer(GravityCompat.START)
+                }
+                R.id.nav_search -> {
+                    Log.d("MENU_DRAWER_TAG", "Search Item Selected");
+                    drawerLayout.closeDrawer(GravityCompat.START)
+                }
+                R.id.nav_account -> {
+                    Log.d("MENU_DRAWER_TAG", "Account Item Selected");
+                    drawerLayout.closeDrawer(GravityCompat.START)
+                }
+                R.id.nav_settings -> {
+                    Log.d("MENU_DRAWER_TAG", "Settings Item Selected");
+                    drawerLayout.closeDrawer(GravityCompat.START)
+                }
+                R.id.nav_logout -> {
+                    Log.d("MENU_DRAWER_TAG", "Logout Item Selected");
+                    drawerLayout.closeDrawer(GravityCompat.START)
+                }
+            }
+            true
+        }
+
         retrieveTrips()
 
     }//end onCreate()
 
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        if(actionBarDrawerToggle.onOptionsItemSelected(item)){
+            true
+        }
+        return super.onOptionsItemSelected(item)
+    }
 
     private fun retrieveTrips() {
         if(Singleton.tripsList.isEmpty()){
             //reference to user document in database
-            Log.d(ContentValues.TAG, "tripsList isEmpty: ${Singleton.tripsList.isEmpty()}");
+            Log.d(TAG, "tripsList isEmpty: ${Singleton.tripsList.isEmpty()}");
 
             val userReference: DocumentReference = fStore.collection("users").document(currentUserId)
             userReference.collection("trips").get()
@@ -126,4 +183,4 @@ class TripsActivity : AppCompatActivity() {
         })
     }//end displayTrips()
 
-}//end class
+}

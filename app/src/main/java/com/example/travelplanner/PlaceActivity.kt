@@ -41,7 +41,7 @@ class PlaceActivity : AppCompatActivity() {
     private lateinit var placeTypesArray: ArrayList<String>
     private lateinit var placeAddress: String
     private lateinit var placeDetail: PlaceDetails
-    lateinit var placeDetailsArray: ArrayList<PlaceDetails>
+    private lateinit var placeDetailsArray: ArrayList<PlaceDetails>
 
     @SuppressLint("SuspiciousIndentation")
     override fun onCreate(savedInstanceState: Bundle?) {
