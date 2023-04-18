@@ -18,6 +18,20 @@
         android:theme="@style/Theme.TravelPlanner"
         tools:targetApi="31">
         <activity
+            android:name=".DrawerBaseActivity"
+            android:exported="false">
+            <meta-data
+                android:name="android.app.lib_name"
+                android:value="" />
+        </activity>
+        <activity
+            android:name=".DashboardActivity"
+            android:exported="false">
+            <meta-data
+                android:name="android.app.lib_name"
+                android:value="" />
+        </activity>
+        <activity
             android:name=".PlaceActivity"
             android:exported="false">
             <meta-data

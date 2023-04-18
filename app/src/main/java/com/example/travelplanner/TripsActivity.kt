@@ -21,6 +21,7 @@ import androidx.drawerlayout.widget.DrawerLayout
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.travelplanner.databinding.ActivityLoginBinding.inflate
+import com.example.travelplanner.databinding.ActivityTripsBinding
 import com.google.android.material.navigation.NavigationBarItemView
 import com.google.android.material.navigation.NavigationView
 import com.google.firebase.auth.FirebaseAuth
@@ -33,7 +34,7 @@ import com.google.firebase.ktx.Firebase
 import org.w3c.dom.Text
 import java.util.zip.Inflater
 
-class TripsActivity : AppCompatActivity(){//end class
+class TripsActivity : DrawerBaseActivity(){//end class
 
     private lateinit var fStore: FirebaseFirestore
     private lateinit var auth: FirebaseAuth
@@ -48,14 +49,13 @@ class TripsActivity : AppCompatActivity(){//end class
 
     private lateinit var newTripBtn: Button
 
-    private lateinit var drawerLayout:DrawerLayout
-    private lateinit var navigationView: NavigationView
-    private lateinit var toolbar: Toolbar
-    private lateinit var actionBarDrawerToggle: ActionBarDrawerToggle
+    private lateinit var activityTripsBinding: ActivityTripsBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_trips)
+        activityTripsBinding = ActivityTripsBinding.inflate(layoutInflater)
+        allocationActivityTitle("Trips")
+        setContentView(activityTripsBinding.root)
 
         auth = Firebase.auth
         fStore = Firebase.firestore
@@ -67,47 +67,9 @@ class TripsActivity : AppCompatActivity(){//end class
         tripsList = Singleton.tripsList
         newTripBtn = this.findViewById(R.id.new_trip_btn)
 
-        drawerLayout = findViewById(R.id.drawer_layout)
-        navigationView = findViewById(R.id.navigation_view)
-        actionBarDrawerToggle = ActionBarDrawerToggle(this, drawerLayout, R.string.menu_Open, R.string.close_menu)
-        drawerLayout.addDrawerListener(actionBarDrawerToggle)
-        actionBarDrawerToggle.syncState()
-        navigationView.setNavigationItemSelectedListener { item ->
-            when(item.itemId){
-                R.id.nav_home -> {
-                    Log.d("MENU_DRAWER_TAG", "Home Item Selected");
-                    drawerLayout.closeDrawer(GravityCompat.START)
-                }
-                R.id.nav_search -> {
-                    Log.d("MENU_DRAWER_TAG", "Search Item Selected");
-                    drawerLayout.closeDrawer(GravityCompat.START)
-                }
-                R.id.nav_account -> {
-                    Log.d("MENU_DRAWER_TAG", "Account Item Selected");
-                    drawerLayout.closeDrawer(GravityCompat.START)
-                }
-                R.id.nav_settings -> {
-                    Log.d("MENU_DRAWER_TAG", "Settings Item Selected");
-                    drawerLayout.closeDrawer(GravityCompat.START)
-                }
-                R.id.nav_logout -> {
-                    Log.d("MENU_DRAWER_TAG", "Logout Item Selected");
-                    drawerLayout.closeDrawer(GravityCompat.START)
-                }
-            }
-            true
-        }
-
         retrieveTrips()
 
     }//end onCreate()
-
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        if(actionBarDrawerToggle.onOptionsItemSelected(item)){
-            true
-        }
-        return super.onOptionsItemSelected(item)
-    }
 
     private fun retrieveTrips() {
         if(Singleton.tripsList.isEmpty()){

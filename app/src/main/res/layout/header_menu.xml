@@ -9,25 +9,11 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_marginTop="50dp"
         android:text="Travel Planner"
         android:textColor="@color/white"
         android:textSize="25sp"
-        android:textStyle="bold" />
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/welcome_name"
-        android:textColor="@color/white"
-        android:textSize="10sp"
-        android:textStyle="bold" />
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/welcome_email"
-        android:textColor="@color/white"
-        android:textSize="10sp"
         android:textStyle="bold" />
 
 </LinearLayout>

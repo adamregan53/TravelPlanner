@@ -11,6 +11,7 @@ import android.widget.Toast
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.travelplanner.databinding.ActivityPlaceBinding
+import com.example.travelplanner.databinding.ActivityTripsBinding
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
 import com.google.firebase.auth.FirebaseAuth
@@ -21,7 +22,7 @@ import com.google.firebase.firestore.GeoPoint
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 
-class PlaceActivity : AppCompatActivity() {
+class PlaceActivity : DrawerBaseActivity() {
 
     private lateinit var tripId: String
 
@@ -43,10 +44,14 @@ class PlaceActivity : AppCompatActivity() {
     private lateinit var placeDetail: PlaceDetails
     private lateinit var placeDetailsArray: ArrayList<PlaceDetails>
 
+    private lateinit var activityPlaceBinding: ActivityPlaceBinding
+
     @SuppressLint("SuspiciousIndentation")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_place)
+        activityPlaceBinding = ActivityPlaceBinding.inflate(layoutInflater)
+        allocationActivityTitle("Places")
+        setContentView(activityPlaceBinding.root)
 
         tripId = intent.getStringExtra("tripId") as String
 

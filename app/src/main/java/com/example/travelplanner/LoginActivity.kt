@@ -53,7 +53,7 @@ class LoginActivity : AppCompatActivity() {
                 if (task.isSuccessful) {
                     // Sign in success, go to TripsActivity to display trips
 
-                    val intent = Intent(this, TripsActivity::class.java)
+                    val intent = Intent(this, DashboardActivity::class.java)
                     startActivity(intent)
 
 
