@@ -23,6 +23,7 @@ import org.w3c.dom.Text
 open class DrawerBaseActivity : AppCompatActivity() {
     lateinit var drawerLayout: DrawerLayout
     lateinit var actionBarDrawerToggle: ActionBarDrawerToggle
+    var clickedNavItem: Int = 0
 
     override fun setContentView(view: View?) {
         drawerLayout = layoutInflater.inflate(R.layout.activity_drawer_base, null) as DrawerLayout
@@ -39,17 +40,15 @@ open class DrawerBaseActivity : AppCompatActivity() {
 
         val navigationView:NavigationView = drawerLayout.findViewById(R.id.nav_view)
         navigationView.setNavigationItemSelectedListener { item ->
-            drawerLayout.closeDrawer(GravityCompat.START)
+
             when(item.itemId){
                 R.id.nav_home -> {
                     Log.d("MENU_DRAWER_TAG", "Home Item Selected");
-                    val intent = Intent(this, DashboardActivity::class.java)
-                    startActivity(intent)
+                    clickedNavItem = R.id.nav_home
                 }
                 R.id.nav_trips -> {
                     Log.d("MENU_DRAWER_TAG", "Trips Item Selected");
-                    val intent = Intent(this, TripsActivity::class.java)
-                    startActivity(intent)
+                    clickedNavItem = R.id.nav_trips
                 }
                 R.id.nav_settings -> {
                     Log.d("MENU_DRAWER_TAG", "Settings Item Selected");
@@ -64,8 +63,35 @@ open class DrawerBaseActivity : AppCompatActivity() {
 
                 }
             }
+            drawerLayout.closeDrawer(GravityCompat.START)
             true
         }
+
+        drawerLayout.addDrawerListener(object: DrawerLayout.DrawerListener{
+            override fun onDrawerSlide(drawerView: View, slideOffset: Float) {}
+
+            override fun onDrawerOpened(drawerView: View) {}
+
+            override fun onDrawerStateChanged(newState: Int) {}
+
+
+            override fun onDrawerClosed(drawerView: View) {
+                when(clickedNavItem){
+                    R.id.nav_home -> {
+                        val intent = Intent(applicationContext, DashboardActivity::class.java)
+                        startActivity(intent)
+                    }
+                    R.id.nav_trips -> {
+                        val intent = Intent(applicationContext, TripsActivity::class.java)
+                        startActivity(intent)
+                    }
+                }
+            }
+
+
+        })
+
+
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
@@ -80,4 +106,6 @@ open class DrawerBaseActivity : AppCompatActivity() {
             supportActionBar!!.title = titleString
         }
     }
+
+
 }
