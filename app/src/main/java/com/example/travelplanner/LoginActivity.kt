@@ -16,6 +16,8 @@ class LoginActivity : AppCompatActivity() {
     //auth is used to authenticate users for firebase
     private lateinit var auth: FirebaseAuth
 
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_login)
@@ -32,7 +34,9 @@ class LoginActivity : AppCompatActivity() {
         loginButton.setOnClickListener{
             performLogin()
         }
-    }
+    }//end onCreate()
+
+
 
     private fun performLogin() {
         val email: EditText = findViewById(R.id.email_login)
@@ -53,7 +57,7 @@ class LoginActivity : AppCompatActivity() {
                 if (task.isSuccessful) {
                     // Sign in success, go to TripsActivity to display trips
 
-                    val intent = Intent(this, DashboardActivity::class.java)
+                    val intent = Intent(this, TripsActivity::class.java)
                     startActivity(intent)
 
 
@@ -69,8 +73,8 @@ class LoginActivity : AppCompatActivity() {
             }
 
 
+    }//end performLogin()
 
-    }
 
 
 }//end class

@@ -65,8 +65,11 @@ open class DrawerBaseActivity : AppCompatActivity() {
             }
             drawerLayout.closeDrawer(GravityCompat.START)
             true
-        }
+        }//end NavigationItemSelectedListener()
 
+
+
+        //adding a drawerListener helps prevent lag when switching activities in Nav Drawer
         drawerLayout.addDrawerListener(object: DrawerLayout.DrawerListener{
             override fun onDrawerSlide(drawerView: View, slideOffset: Float) {}
 
@@ -89,23 +92,27 @@ open class DrawerBaseActivity : AppCompatActivity() {
             }
 
 
-        })
+        })//end DrawerListener()
 
 
-    }
+    }//end setContentView()
+
+
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         if(actionBarDrawerToggle.onOptionsItemSelected(item)){
             true
         }
         return super.onOptionsItemSelected(item)
-    }
+    }//end onOptionsItemSelected()
 
+    //each activity sets the action bar title
     fun allocationActivityTitle(titleString:String){
         if(supportActionBar != null) {
             supportActionBar!!.title = titleString
         }
-    }
+    }//end allocationActivityTitle()
 
 
-}
+
+}//end class

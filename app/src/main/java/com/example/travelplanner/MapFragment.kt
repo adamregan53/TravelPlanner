@@ -1,69 +1,45 @@
 package com.example.travelplanner
 
-import android.Manifest
-import android.content.ContentValues.TAG
-import android.content.Intent
-import android.content.pm.PackageManager
-import android.location.Location
-import androidx.appcompat.app.AppCompatActivity
+import android.content.ContentValues
 import android.os.Bundle
 import android.util.Log
+import androidx.fragment.app.Fragment
+import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewGroup
 import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
 import androidx.cardview.widget.CardView
 import androidx.core.app.ActivityCompat
-import androidx.core.app.ActivityCompat.OnRequestPermissionsResultCallback
-import androidx.core.content.ContextCompat
-import com.example.travelplanner.BuildConfig.MAPS_API_KEY
-import com.google.android.gms.maps.CameraUpdateFactory
-import com.google.android.gms.maps.GoogleMap
-import com.google.android.gms.maps.OnMapReadyCallback
-import com.google.android.gms.maps.SupportMapFragment
-import com.example.travelplanner.databinding.ActivityMapsBinding
+import androidx.core.view.get
+
 import com.google.android.gms.common.api.Status
-import com.google.android.gms.maps.CameraUpdate
+import com.google.android.gms.maps.*
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
 import com.google.android.libraries.places.api.Places
 import com.google.android.libraries.places.api.model.Place
 import com.google.android.libraries.places.api.model.RectangularBounds
-import com.google.android.libraries.places.api.model.TypeFilter
 import com.google.android.libraries.places.api.net.PlacesClient
-import com.google.android.libraries.places.widget.AutocompleteFragment
 import com.google.android.libraries.places.widget.AutocompleteSupportFragment
 import com.google.android.libraries.places.widget.listener.PlaceSelectionListener
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.DocumentReference
-import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.GeoPoint
-import com.google.firebase.firestore.ktx.firestore
-import com.google.firebase.ktx.Firebase
-import com.google.gson.JsonParser
-import org.w3c.dom.Text
 
-class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnRequestPermissionsResultCallback {
 
-    //Google Maps API
-    private lateinit var map: GoogleMap
-    private lateinit var binding: ActivityMapsBinding
+class MapFragment : Fragment(), OnMapReadyCallback,
+    ActivityCompat.OnRequestPermissionsResultCallback {
 
-    //Values From TripsActivity
-    private lateinit var tripId: String
-    private lateinit var tripName: String
+    private lateinit var googleMap:GoogleMap
+    private lateinit var mapView: MapView
+    private lateinit var tripsReference: DocumentReference
+
+    private lateinit var testPlacesActivity: TestPlacesActivity
     private var tripLatitude: Double = 0.0
     private var tripLongitude: Double = 0.0
 
-    //Firebase
-    private lateinit var fStore: FirebaseFirestore
-    private lateinit var auth: FirebaseAuth
-    private lateinit var currentUserId: String
-    private lateinit var tripsReference: DocumentReference
-
-    //
     private lateinit var placeName: String
     private lateinit var placeId: String
     private lateinit var placeCoordinates: GeoPoint
@@ -72,79 +48,64 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnRequestPermissio
     private lateinit var placeDetail: PlaceDetails
     private lateinit var placeDetailsArray: ArrayList<PlaceDetails>
 
+    //view components
     private lateinit var addBtn: Button
     private lateinit var cancelBtn: Button
-
     private lateinit var placeInfoLayout: CardView
     private lateinit var clearPlaceBtn: Button
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
 
-        binding = ActivityMapsBinding.inflate(layoutInflater)
-        setContentView(binding.root)
+    override fun onActivityCreated(savedInstanceState: Bundle?) {
+        super.onActivityCreated(savedInstanceState)
+        mapView = view?.findViewById<MapView>(R.id.map_view)!!
+        mapView.onCreate(savedInstanceState)
+        mapView.onResume()
 
-        tripId = intent.getStringExtra("tripId").toString()
-        tripLatitude = intent.getDoubleExtra("tripLatitude", 0.0)
-        tripLongitude = intent.getDoubleExtra("tripLongitude", 0.0)
+        mapView.getMapAsync(this)
 
-
-        /*
-        tripName = myApplication.tripsList[position].name
-        tripLatitude = myApplication.tripsList[position].coordinates.latitude
-        tripLongitude = myApplication.tripsList[position].coordinates.latitude
-        */
+        //retrieve data from Activity
+        testPlacesActivity = activity as TestPlacesActivity
+        tripsReference = testPlacesActivity.tripsReference
+        tripLatitude = testPlacesActivity.tripLatitude
+        tripLongitude = testPlacesActivity.tripLongitude
 
         placeDetailsArray = ArrayList()
 
-        fStore = Firebase.firestore
-        auth = Firebase.auth
-        currentUserId = auth.currentUser?.uid.toString()
-        tripsReference = fStore.collection("users")
-            .document(currentUserId)
-            .collection("trips")
-            .document(tripId)
-
-
-
         //init buttons
-        addBtn = findViewById(R.id.addBtn)
-        cancelBtn = findViewById(R.id.cancelBtn)
+        addBtn = requireView().findViewById(R.id.addBtn)
+        cancelBtn = requireView().findViewById(R.id.cancelBtn)
         addBtn.visibility = View.INVISIBLE
         cancelBtn.visibility = View.INVISIBLE
 
         //placeInfoCard
-        placeInfoLayout = findViewById(R.id.place_details_card)
+        placeInfoLayout = requireView().findViewById(R.id.place_details_card)
         placeInfoLayout.visibility = View.INVISIBLE
-        clearPlaceBtn = findViewById(R.id.cardbtn_clear)
-
-        //Obtain the SupportMapFragment and get notified when the map is ready to be used.
-        val mapFragment = supportFragmentManager
-            .findFragmentById(R.id.map) as SupportMapFragment
-        mapFragment.getMapAsync(this)
+        clearPlaceBtn = requireView().findViewById(R.id.cardbtn_clear)
 
         initPlacesAutocomplete()
 
-
-    }//end onCreate()
+    }//end onActivityCreated()
 
     private fun initPlacesAutocomplete() {
         if(!Places.isInitialized()){
-            Places.initialize(applicationContext, MAPS_API_KEY)
+            Places.initialize(this.testPlacesActivity, BuildConfig.MAPS_API_KEY)
         }
 
-        val placesClient: PlacesClient = Places.createClient(this)
+        val placesClient: PlacesClient = Places.createClient(this.testPlacesActivity)
 
-        val autoCompleteFragment = supportFragmentManager.findFragmentById(R.id.autocomplete_fragment) as AutocompleteSupportFragment
+        //childFragmentManger includes SupportFragmentManager which allows this to work inside a fragment
+        val autoCompleteFragment = childFragmentManager.findFragmentById(R.id.autocomplete_fragment_test) as AutocompleteSupportFragment
 
-        autoCompleteFragment.setLocationBias(RectangularBounds.newInstance(
+        autoCompleteFragment.setLocationBias(
+            RectangularBounds.newInstance(
             LatLng(tripLatitude,tripLongitude),
             LatLng(tripLatitude,tripLongitude)
 
         ))
 
         //specifies the information the application will receive from the API
-        autoCompleteFragment.setPlaceFields(listOf(Place.Field.ID,
+        autoCompleteFragment.setPlaceFields(listOf(
+            Place.Field.ID,
             Place.Field.NAME,
             Place.Field.LAT_LNG,
             Place.Field.TYPES,
@@ -153,6 +114,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnRequestPermissio
         )
 
         autoCompleteFragment.setOnPlaceSelectedListener(object : PlaceSelectionListener {
+
             override fun onPlaceSelected(place: Place) {
                 Log.i("Places", "Place: ${place.name}, ${place.id}, ${place.latLng}, ${place.types}, ${place.address}")
                 Log.i("Places", "Json: $place")
@@ -172,14 +134,14 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnRequestPermissio
 
                 val placeLocation = LatLng(placeCoordinates.latitude, placeCoordinates.longitude)
                 var newPlaceMarker: Marker? = null
-                newPlaceMarker = map.addMarker(
+                newPlaceMarker = googleMap.addMarker(
                     MarkerOptions()
                         .position(placeLocation)
                         .title(placeName)
                 )
                 val placeLatLng: LatLng = LatLng(placeCoordinates.latitude, placeCoordinates.longitude)
                 val location: CameraUpdate = CameraUpdateFactory.newLatLngZoom(placeLatLng, 16f)
-                map.animateCamera(location)
+                googleMap.animateCamera(location)
 
                 addBtn.visibility = View.VISIBLE
                 cancelBtn.visibility = View.VISIBLE
@@ -187,15 +149,15 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnRequestPermissio
                 addBtn.setOnClickListener{
                     tripsReference.collection("places").add(placeDetail)
                         .addOnSuccessListener{
-                            Log.d(TAG, "Place Added Successfully")
-                            Toast.makeText(applicationContext, "Place Added Successfully", Toast.LENGTH_SHORT).show()
+                            Log.d(ContentValues.TAG, "Place Added Successfully")
+                            Toast.makeText(context, "Place Added Successfully", Toast.LENGTH_SHORT).show()
                             placeDetailsArray.add(placeDetail)
                             addBtn.visibility = View.INVISIBLE
                             cancelBtn.visibility = View.INVISIBLE
                         }
                         .addOnFailureListener{
-                            Log.d(TAG, "Failed to add place")
-                            Toast.makeText(applicationContext, "Failed to add place", Toast.LENGTH_SHORT).show()
+                            Log.d(ContentValues.TAG, "Failed to add place")
+                            Toast.makeText(context, "Failed to add place", Toast.LENGTH_SHORT).show()
                             addBtn.visibility = View.INVISIBLE
                             cancelBtn.visibility = View.INVISIBLE
                         }
@@ -203,54 +165,65 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnRequestPermissio
 
                 cancelBtn.setOnClickListener{
                     newPlaceMarker?.remove()
-                    Toast.makeText(applicationContext, "Cancelled", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, "Cancelled", Toast.LENGTH_SHORT).show()
                     addBtn.visibility = View.INVISIBLE
                     cancelBtn.visibility = View.INVISIBLE
                 }
-
             }
 
             override fun onError(status: Status) {
-                Log.i(TAG, "Could not find place: $status")
+                Log.i(ContentValues.TAG, "Could not find place: $status")
+
             }
         })
-    }//init initPlaceAutoComplete()
+    }//end initAutocompletePlaces()
 
-    override fun onMapReady(googleMap: GoogleMap) {
-        map = googleMap
+    override fun onCreateView(
+        inflater: LayoutInflater, container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
+        // Inflate the layout for this fragment
 
-        val tripLocation = LatLng(tripLatitude, tripLongitude)
-        googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(tripLocation, 12f))
+        return inflater.inflate(R.layout.fragment_map, container, false)
+    }//end onCreateView()
 
-        displayPlaceMarkers()
+    override fun onMapReady(map: GoogleMap) {
+        //this works so don't touch it
+        map?.let {
+            googleMap = it
 
-        map.setOnMarkerClickListener{marker ->
-            val markerLocation: LatLng = LatLng(marker.position.latitude, marker.position.longitude)
-            val location: CameraUpdate = CameraUpdateFactory.newLatLngZoom(markerLocation, 16f)
-            map.animateCamera(location)
+            //set camera to trip location
+            val tripLocation = LatLng(tripLatitude, tripLongitude)
+            map.moveCamera(CameraUpdateFactory.newLatLngZoom(tripLocation, 12f))
 
-            val placeName: TextView = findViewById(R.id.card_place_name)
-            val placeAddress: TextView = findViewById(R.id.card_place_address)
+            displayPlaceMarkers()
+
+            map.setOnMarkerClickListener{marker ->
+                val markerLocation: LatLng = LatLng(marker.position.latitude, marker.position.longitude)
+                val location: CameraUpdate = CameraUpdateFactory.newLatLngZoom(markerLocation, 16f)
+                map.animateCamera(location)
+
+                val placeName: TextView = requireView().findViewById(R.id.card_place_name)
+                val placeAddress: TextView = requireView().findViewById(R.id.card_place_address)
 
 
-            for(place in placeDetailsArray){
-                if(place.name == marker.title){
-                    placeName.text = place.name.toString()
-                    placeAddress.text = place.address.toString()
+                for(place in placeDetailsArray){
+                    if(place.name == marker.title){
+                        placeName.text = place.name.toString()
+                        placeAddress.text = place.address.toString()
+                    }
                 }
+                placeInfoLayout.visibility = View.VISIBLE
+
+                true
             }
-            placeInfoLayout.visibility = View.VISIBLE
 
-            true
+            clearPlaceBtn.setOnClickListener{
+                placeInfoLayout.visibility = View.INVISIBLE
+            }
+
         }
-
-        clearPlaceBtn.setOnClickListener{
-            placeInfoLayout.visibility = View.INVISIBLE
-        }
-
-
     }//end onMapReady()
-
 
     private fun displayPlaceMarkers() {
         tripsReference.collection("places").get()
@@ -271,7 +244,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnRequestPermissio
 
                 for(place in placeDetailsArray){
                     val placeLocation = LatLng(place.coordinates.latitude, place.coordinates.longitude)
-                    map.addMarker(
+                    googleMap.addMarker(
                         MarkerOptions()
                             .position(placeLocation)
                             .title(place.name)
@@ -280,9 +253,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnRequestPermissio
 
             }
             .addOnFailureListener{
-                Toast.makeText(applicationContext, "Could not display map markers", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, "Could not display map markers", Toast.LENGTH_SHORT).show()
             }
-
-    }//end displayPlaceMarkers()
+    }//end displayMarkers()
 
 }//end class

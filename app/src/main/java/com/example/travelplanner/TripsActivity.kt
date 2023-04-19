@@ -51,6 +51,8 @@ class TripsActivity : DrawerBaseActivity(){//end class
 
     private lateinit var activityTripsBinding: ActivityTripsBinding
 
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         activityTripsBinding = ActivityTripsBinding.inflate(layoutInflater)
@@ -70,6 +72,8 @@ class TripsActivity : DrawerBaseActivity(){//end class
         retrieveTrips()
 
     }//end onCreate()
+
+
 
     private fun retrieveTrips() {
         if(Singleton.tripsList.isEmpty()){
@@ -99,7 +103,7 @@ class TripsActivity : DrawerBaseActivity(){//end class
                     Toast.makeText(applicationContext, "Failure", Toast.LENGTH_LONG).show()
                 }
         }else{
-            //Toast.makeText(this, "No trips available", Toast.LENGTH_SHORT).show()
+            //use singleton to display trips after retrieved from Firebase
             for(trip in tripsList){
                 tripId = trip.id
                 tripName = trip.name
@@ -109,7 +113,6 @@ class TripsActivity : DrawerBaseActivity(){//end class
 
             displayTrips()
         }
-
 
 
     }//end retrieveTrips()
@@ -131,18 +134,16 @@ class TripsActivity : DrawerBaseActivity(){//end class
                 val coordinates = tripsList[position].coordinates
                 Log.w(TAG, "tripId: $tripId, tripName: $tripName, coordinates: $coordinates")
 
-
-                val intent =Intent(this@TripsActivity, PlaceActivity::class.java)
-                intent.putExtra("tripId", tripId)
-                /*
-                intent.putExtra("tripName", tripName)
-                intent.putExtra("latitude", coordinates.latitude)
-                intent.putExtra("longitude", coordinates.longitude)
-                */
+                val intent =Intent(this@TripsActivity, TestPlacesActivity::class.java)
+                intent.putExtra("tripId", tripId)//used for Firebase Document Reference
+                intent.putExtra("tripLatitude", coordinates.latitude)
+                intent.putExtra("tripLongitude", coordinates.longitude)
                 startActivity(intent)
             }
 
         })
     }//end displayTrips()
 
-}
+
+
+}//end class

@@ -18,6 +18,13 @@
         android:theme="@style/Theme.TravelPlanner"
         tools:targetApi="31">
         <activity
+            android:name=".TestPlacesActivity"
+            android:exported="false">
+            <meta-data
+                android:name="android.app.lib_name"
+                android:value="" />
+        </activity>
+        <activity
             android:name=".DrawerBaseActivity"
             android:exported="false">
             <meta-data
@@ -26,21 +33,25 @@
         </activity>
         <activity
             android:name=".DashboardActivity"
-            android:exported="false">
+            android:exported="false"
+            android:label="Dashboard">
             <meta-data
                 android:name="android.app.lib_name"
                 android:value="" />
+
         </activity>
         <activity
             android:name=".PlaceActivity"
-            android:exported="false">
+            android:exported="false"
+            android:label="Places">
             <meta-data
                 android:name="android.app.lib_name"
                 android:value="" />
         </activity>
         <activity
             android:name=".TripsActivity"
-            android:exported="false">
+            android:exported="false"
+            android:label="Trips">
             <meta-data
                 android:name="android.app.lib_name"
                 android:value="" />
@@ -64,6 +75,7 @@
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+
         </activity>
 
         <meta-data
