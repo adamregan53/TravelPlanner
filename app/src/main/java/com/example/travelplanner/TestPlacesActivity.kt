@@ -1,12 +1,15 @@
 package com.example.travelplanner
 
+import android.content.ContentValues
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
 import android.widget.Button
 import androidx.cardview.widget.CardView
 import com.example.travelplanner.databinding.ActivityTestPlacesBinding
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.libraries.places.api.Places
+import com.google.android.libraries.places.api.model.OpeningHours
 import com.google.android.libraries.places.api.model.Place
 import com.google.android.libraries.places.api.model.RectangularBounds
 import com.google.android.libraries.places.api.net.PlacesClient
@@ -45,15 +48,11 @@ class TestPlacesActivity : DrawerBaseActivity() {
     private lateinit var placeCoordinates: GeoPoint
     private lateinit var placeTypesArray: ArrayList<String>
     private lateinit var placeAddress: String
+    private lateinit var placeOpeningHours: OpeningHours
     private lateinit var placeDetail: PlaceDetails
-    private lateinit var placeDetailsArray: ArrayList<PlaceDetails>
+    lateinit var placeDetailsArray: ArrayList<PlaceDetails>
 
-    private lateinit var addBtn: Button
-    private lateinit var cancelBtn: Button
-
-    private lateinit var placeInfoLayout: CardView
-    private lateinit var clearPlaceBtn: Button
-
+    //buttons fo switching fragment view
     private lateinit var btnPlacesList: Button
     private lateinit var btnPlacesMap: Button
 
@@ -76,12 +75,48 @@ class TestPlacesActivity : DrawerBaseActivity() {
             .collection("trips")
             .document(tripId)
 
-        initFragments()
+        placeDetailsArray = arrayListOf<PlaceDetails>()
+
+        retrievePlaces()
+
 
     }//end onCreate()
 
 
+    private fun retrievePlaces() {
+        tripsReference.collection("places").get()
+            .addOnSuccessListener { result ->
+                for (document in result) {
+                    placeName = document.data["name"].toString()
+                    placeId = document.id
+                    placeAddress = document.data["address"].toString()
+                    placeTypesArray = ArrayList()
+                    val arrayTypes = document.data["types"] as ArrayList<*>
+                    for (type in arrayTypes) {
+                        placeTypesArray.add(type.toString())
+                    }
+                    placeCoordinates = document.data["coordinates"] as GeoPoint
+                    placeDetail = PlaceDetails(
+                        placeName,
+                        placeId,
+                        placeCoordinates,
+                        placeTypesArray,
+                        placeAddress
+                    )
+
+                    placeDetailsArray.add(placeDetail)
+
+                }
+                initFragments()
+            }
+
+    }//end retrievePlaces()
+
+
     private fun initFragments() {
+
+        Log.d(ContentValues.TAG, "Test Place Activity: ${placeDetailsArray}");
+
         //init fragments
         placesListFragment = PlacesListFragment()
         placesMapFragment = MapFragment()
@@ -108,6 +143,10 @@ class TestPlacesActivity : DrawerBaseActivity() {
             }
         }
     }//end initFragments()
+
+
+
+
 
 
 }//end class

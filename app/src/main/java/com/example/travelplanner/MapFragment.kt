@@ -20,13 +20,19 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
 import com.google.android.libraries.places.api.Places
+import com.google.android.libraries.places.api.model.OpeningHours
 import com.google.android.libraries.places.api.model.Place
 import com.google.android.libraries.places.api.model.RectangularBounds
 import com.google.android.libraries.places.api.net.PlacesClient
 import com.google.android.libraries.places.widget.AutocompleteSupportFragment
 import com.google.android.libraries.places.widget.listener.PlaceSelectionListener
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.DocumentReference
+import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.GeoPoint
+import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.ktx.Firebase
 
 
 class MapFragment : Fragment(), OnMapReadyCallback,
@@ -34,6 +40,9 @@ class MapFragment : Fragment(), OnMapReadyCallback,
 
     private lateinit var googleMap:GoogleMap
     private lateinit var mapView: MapView
+
+    private lateinit var fStore: FirebaseFirestore
+    private lateinit var auth: FirebaseAuth
     private lateinit var tripsReference: DocumentReference
 
     private lateinit var testPlacesActivity: TestPlacesActivity
@@ -45,6 +54,7 @@ class MapFragment : Fragment(), OnMapReadyCallback,
     private lateinit var placeCoordinates: GeoPoint
     private lateinit var placeTypesArray: ArrayList<String>
     private lateinit var placeAddress: String
+    private lateinit var placeOpeningHours: OpeningHours
     private lateinit var placeDetail: PlaceDetails
     private lateinit var placeDetailsArray: ArrayList<PlaceDetails>
 
@@ -69,7 +79,10 @@ class MapFragment : Fragment(), OnMapReadyCallback,
         tripLatitude = testPlacesActivity.tripLatitude
         tripLongitude = testPlacesActivity.tripLongitude
 
-        placeDetailsArray = ArrayList()
+        auth = Firebase.auth
+        fStore = Firebase.firestore
+
+        placeDetailsArray = testPlacesActivity.placeDetailsArray
 
         //init buttons
         addBtn = requireView().findViewById(R.id.addBtn)
@@ -110,13 +123,16 @@ class MapFragment : Fragment(), OnMapReadyCallback,
             Place.Field.LAT_LNG,
             Place.Field.TYPES,
             Place.Field.ADDRESS,
-            Place.Field.OPENING_HOURS)
+            Place.Field.OPENING_HOURS,
+            Place.Field.RATING,
+            Place.Field.WEBSITE_URI,
+            Place.Field.UTC_OFFSET)
         )
 
         autoCompleteFragment.setOnPlaceSelectedListener(object : PlaceSelectionListener {
 
             override fun onPlaceSelected(place: Place) {
-                Log.i("Places", "Place: ${place.name}, ${place.id}, ${place.latLng}, ${place.types}, ${place.address}")
+                Log.i("Places", "Place: ${place.name}, ${place.id}, ${place.latLng}, ${place.types}, ${place.address}, ${place.openingHours}")
                 Log.i("Places", "Json: $place")
 
                 placeInfoLayout.visibility = View.INVISIBLE
@@ -129,9 +145,30 @@ class MapFragment : Fragment(), OnMapReadyCallback,
                     placeTypesArray.add(type.toString())
                 }
                 placeAddress = place.address
+                placeOpeningHours = place.openingHours
+
+                Log.i("Place Opening Hours", "${placeOpeningHours.periods}")
+
+                val placeOpeningHoursArray = ArrayList<Any>()
+                for (period in placeOpeningHours.periods){
+                    val openingHours = hashMapOf(
+                        "dayOpen" to period.open.day.name,
+                        "dayClose" to period.close.day.name,
+                        "close" to period.close.time,
+                        "open" to period.open.time
+                    )
+                    placeOpeningHoursArray.add(openingHours)
+
+                }
+
+                for (openingHours in placeOpeningHoursArray){
+                    Log.i("Place Opening Hours", "${openingHours}")
+                }
+
+
                 val placeDetail = PlaceDetails(placeName, placeId, placeCoordinates, placeTypesArray, placeAddress)
 
-
+                //set marker and animate camera
                 val placeLocation = LatLng(placeCoordinates.latitude, placeCoordinates.longitude)
                 var newPlaceMarker: Marker? = null
                 newPlaceMarker = googleMap.addMarker(
@@ -160,6 +197,13 @@ class MapFragment : Fragment(), OnMapReadyCallback,
                             Toast.makeText(context, "Failed to add place", Toast.LENGTH_SHORT).show()
                             addBtn.visibility = View.INVISIBLE
                             cancelBtn.visibility = View.INVISIBLE
+                        }
+                    fStore.collection("places").add(placeDetail)
+                        .addOnSuccessListener {
+                            Log.d(ContentValues.TAG, "Place Added To Full Places List")
+                        }
+                        .addOnFailureListener{
+                            Log.d(ContentValues.TAG, "Place Failed to add to Full List")
                         }
                 }
 
@@ -226,34 +270,15 @@ class MapFragment : Fragment(), OnMapReadyCallback,
     }//end onMapReady()
 
     private fun displayPlaceMarkers() {
-        tripsReference.collection("places").get()
-            .addOnSuccessListener {result ->
-                for(document in result){
-                    placeName = document.data["name"].toString()
-                    placeId = document.id
-                    placeAddress = document.data["address"].toString()
-                    placeTypesArray = ArrayList()
-                    val arrayTypes = document.data["types"] as ArrayList<*>
-                    for(type in arrayTypes){
-                        placeTypesArray.add(type.toString())
-                    }
-                    placeCoordinates = document.data["coordinates"] as GeoPoint
-                    placeDetail = PlaceDetails(placeName, placeId, placeCoordinates, placeTypesArray, placeAddress)
-                    placeDetailsArray.add(placeDetail)
-                }
+        Log.d(ContentValues.TAG, "Map Fragment: ${placeDetailsArray}");
 
-                for(place in placeDetailsArray){
-                    val placeLocation = LatLng(place.coordinates.latitude, place.coordinates.longitude)
-                    googleMap.addMarker(
-                        MarkerOptions()
-                            .position(placeLocation)
-                            .title(place.name)
-                    )
-                }
-
-            }
-            .addOnFailureListener{
-                Toast.makeText(context, "Could not display map markers", Toast.LENGTH_SHORT).show()
+        for(place in placeDetailsArray){
+                val placeLocation = LatLng(place.coordinates.latitude, place.coordinates.longitude)
+                googleMap.addMarker(
+                    MarkerOptions()
+                        .position(placeLocation)
+                        .title(place.name)
+                )
             }
     }//end displayMarkers()
 
