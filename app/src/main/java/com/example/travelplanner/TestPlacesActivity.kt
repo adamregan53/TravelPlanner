@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.util.Log
 import android.widget.Button
 import androidx.cardview.widget.CardView
+import androidx.viewpager2.widget.ViewPager2
 import com.example.travelplanner.databinding.ActivityTestPlacesBinding
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.libraries.places.api.Places
@@ -14,6 +15,8 @@ import com.google.android.libraries.places.api.model.Place
 import com.google.android.libraries.places.api.model.RectangularBounds
 import com.google.android.libraries.places.api.net.PlacesClient
 import com.google.android.libraries.places.widget.AutocompleteSupportFragment
+import com.google.android.material.tabs.TabLayout
+import com.google.android.material.tabs.TabLayout.OnTabSelectedListener
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.DocumentReference
@@ -52,9 +55,9 @@ class TestPlacesActivity : DrawerBaseActivity() {
     private lateinit var placeDetail: PlaceDetails
     lateinit var placeDetailsArray: ArrayList<PlaceDetails>
 
-    //buttons fo switching fragment view
-    private lateinit var btnPlacesList: Button
-    private lateinit var btnPlacesMap: Button
+    private lateinit var tabLayout: TabLayout
+    private lateinit var viewPager2: ViewPager2
+    private lateinit var viewPagerAdapter: ViewPagerAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -76,6 +79,7 @@ class TestPlacesActivity : DrawerBaseActivity() {
             .document(tripId)
 
         placeDetailsArray = arrayListOf<PlaceDetails>()
+
 
         retrievePlaces()
 
@@ -114,34 +118,34 @@ class TestPlacesActivity : DrawerBaseActivity() {
 
 
     private fun initFragments() {
+        tabLayout = findViewById(R.id.tab_layout)
+        viewPager2 = findViewById(R.id.view_pager2)
+        viewPagerAdapter = ViewPagerAdapter(supportFragmentManager, lifecycle)
+        viewPager2.adapter = viewPagerAdapter
 
-        Log.d(ContentValues.TAG, "Test Place Activity: ${placeDetailsArray}");
 
-        //init fragments
-        placesListFragment = PlacesListFragment()
-        placesMapFragment = MapFragment()
-
-        supportFragmentManager.beginTransaction().apply {
-            replace(R.id.flFragment, placesListFragment)
-            commit()
-        }
-
-        btnPlacesList = findViewById(R.id.btnPlacesList)
-        btnPlacesMap = findViewById(R.id.btnPlacesMap)
-
-        btnPlacesList.setOnClickListener{
-            supportFragmentManager.beginTransaction().apply {
-                replace(R.id.flFragment, placesListFragment)
-                commit()
+        tabLayout.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener{
+            override fun onTabSelected(tab: TabLayout.Tab?) {
+                if (tab != null) {
+                    viewPager2.currentItem = tab.position
+                }
             }
-        }
 
-        btnPlacesMap.setOnClickListener {
-            supportFragmentManager.beginTransaction().apply {
-                replace(R.id.flFragment, placesMapFragment)
-                commit()
+            override fun onTabUnselected(tab: TabLayout.Tab?) {
             }
-        }
+
+            override fun onTabReselected(tab: TabLayout.Tab?) {
+            }
+
+        })
+
+        viewPager2.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback(){
+            override fun onPageSelected(position: Int) {
+                super.onPageSelected(position)
+                tabLayout.selectTab(tabLayout.getTabAt(position))
+            }
+        })
+
     }//end initFragments()
 
 

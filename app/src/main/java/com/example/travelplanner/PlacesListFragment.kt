@@ -1,15 +1,19 @@
 package com.example.travelplanner
 
+import android.content.ClipData.Item
 import android.content.ContentValues
 import android.os.Bundle
 import android.util.Log
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.fragment.app.Fragment
+import androidx.recyclerview.widget.DividerItemDecoration
+import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import androidx.recyclerview.widget.RecyclerView.Recycler
+import androidx.recyclerview.widget.RecyclerView.ViewHolder
+import com.google.android.libraries.places.api.model.Place
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.DocumentReference
@@ -17,6 +21,8 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.GeoPoint
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
+import java.util.*
+import kotlin.collections.ArrayList
 
 
 class PlacesListFragment : Fragment() {
@@ -33,6 +39,7 @@ class PlacesListFragment : Fragment() {
 
     //recycler view
     private lateinit var placeRecyclerView: RecyclerView
+    private lateinit var adapter:PlaceAdapter
 
     //place details
     private lateinit var placeName: String
@@ -78,7 +85,7 @@ class PlacesListFragment : Fragment() {
     private fun displayPlaces() {
         placeRecyclerView.layoutManager = LinearLayoutManager(this.testPlacesActivity)
 
-        var adapter = PlaceAdapter(placeDetailsArray)
+        adapter = PlaceAdapter(placeDetailsArray)
         placeRecyclerView.adapter = adapter
         adapter.setOnItemClickListener(object: PlaceAdapter.onItemClickListener{
             override fun onItemClick(position: Int) {
@@ -86,7 +93,48 @@ class PlacesListFragment : Fragment() {
             }
 
         })
+
+        val dividerItemDecoration:DividerItemDecoration = DividerItemDecoration(this.testPlacesActivity, DividerItemDecoration.VERTICAL)
+        placeRecyclerView.addItemDecoration(dividerItemDecoration)
+
+        val itemTouchHelper = ItemTouchHelper(simpleCallback)
+        itemTouchHelper.attachToRecyclerView(placeRecyclerView)
+
     }//end displayPlaces()
+
+
+    //change order of recycler view
+    val simpleCallback = object : ItemTouchHelper.SimpleCallback(
+            ItemTouchHelper.UP or ItemTouchHelper.DOWN or
+                    ItemTouchHelper.START or ItemTouchHelper.END, ItemTouchHelper.LEFT
+        ) {
+            override fun onMove(
+                recyclerView: RecyclerView,
+                viewHolder: ViewHolder,
+                target: ViewHolder
+            ): Boolean {
+                val fromPos = viewHolder.adapterPosition
+                val toPos = target.adapterPosition
+                Collections.swap(placeDetailsArray, fromPos, toPos)
+                // move item in `fromPos` to `toPos` in adapter.
+
+                adapter.notifyItemMoved(fromPos, toPos)
+
+                return false // true if moved, false otherwise
+            }
+
+            override fun onSwiped(viewHolder: ViewHolder, direction: Int) {
+                // remove from adapter
+                val position = viewHolder.adapterPosition
+
+                when(direction){
+                    ItemTouchHelper.LEFT -> {
+                        placeDetailsArray.removeAt(position)
+                        adapter.notifyItemRemoved(position)
+                    }
+                }
+            }
+        }
 
 
 }//end class

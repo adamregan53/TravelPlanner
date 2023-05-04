@@ -33,6 +33,7 @@ open class DrawerBaseActivity : AppCompatActivity() {
 
         val toolBar: Toolbar = drawerLayout.findViewById(R.id.toolBar)
         setSupportActionBar(toolBar)
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
         actionBarDrawerToggle = ActionBarDrawerToggle(this, drawerLayout, R.string.menu_Open, R.string.close_menu)
         drawerLayout.addDrawerListener(actionBarDrawerToggle)

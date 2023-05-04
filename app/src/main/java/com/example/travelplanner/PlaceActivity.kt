@@ -6,14 +6,17 @@ import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
+import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.travelplanner.databinding.ActivityPlaceBinding
+import com.example.travelplanner.databinding.ActivityTestPlacesBinding
 import com.example.travelplanner.databinding.ActivityTripsBinding
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
+import com.google.android.libraries.places.api.model.OpeningHours
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.DocumentReference
@@ -24,37 +27,49 @@ import com.google.firebase.ktx.Firebase
 
 class PlaceActivity : DrawerBaseActivity() {
 
-    private lateinit var tripId: String
+    private lateinit var binding: ActivityTestPlacesBinding
 
-    //Firestore
+    //init fragments
+    private lateinit var placesListFragment: PlacesListFragment
+    private lateinit var placesMapFragment: MapFragment
+
+    //Firebase
     private lateinit var fStore: FirebaseFirestore
     private lateinit var auth: FirebaseAuth
     private lateinit var currentUserId: String
-    private lateinit var tripsReference: DocumentReference
+    lateinit var tripsReference: DocumentReference
 
-    //recycler view
-    private lateinit var placeRecyclerView: RecyclerView
+    //Values From TripsActivity
+    private lateinit var tripId: String
+    private lateinit var tripName: String
+    var tripLatitude: Double = 0.0
+    var tripLongitude: Double = 0.0
 
-    //place details
+    //init place variables
     private lateinit var placeName: String
     private lateinit var placeId: String
     private lateinit var placeCoordinates: GeoPoint
     private lateinit var placeTypesArray: ArrayList<String>
     private lateinit var placeAddress: String
+    private lateinit var placeOpeningHours: OpeningHours
     private lateinit var placeDetail: PlaceDetails
-    private lateinit var placeDetailsArray: ArrayList<PlaceDetails>
+    lateinit var placeDetailsArray: ArrayList<PlaceDetails>
 
-    private lateinit var activityPlaceBinding: ActivityPlaceBinding
+    //buttons fo switching fragment view
+    private lateinit var btnPlacesList: Button
+    private lateinit var btnPlacesMap: Button
 
-    @SuppressLint("SuspiciousIndentation")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        activityPlaceBinding = ActivityPlaceBinding.inflate(layoutInflater)
-        allocationActivityTitle("Places")
-        setContentView(activityPlaceBinding.root)
+        binding = ActivityTestPlacesBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
+        //received from TripsActivity
         tripId = intent.getStringExtra("tripId") as String
+        tripLatitude = intent.getDoubleExtra("tripLatitude", 0.0)
+        tripLongitude = intent.getDoubleExtra("tripLongitude", 0.0)
 
+        //init Firebase
         auth = Firebase.auth
         fStore = Firebase.firestore
         currentUserId = auth.currentUser?.uid.toString()
@@ -63,62 +78,73 @@ class PlaceActivity : DrawerBaseActivity() {
             .collection("trips")
             .document(tripId)
 
-        placeRecyclerView = findViewById(R.id.placeRecyclerView)
-
         placeDetailsArray = arrayListOf<PlaceDetails>()
-
-        val singleton: Singleton = Singleton
-        var tripIdInt: Int = 0
-        for ((i, trip) in singleton.tripsList.withIndex()){
-            if (trip.id == tripId){
-                tripIdInt = i
-            }
-        }
-        Log.d(ContentValues.TAG, "Singleton Test: ${singleton.tripsList[tripIdInt].name}");
-
 
         retrievePlaces()
 
 
     }//end onCreate()
 
-    private fun retrievePlaces(){
+
+    private fun retrievePlaces() {
         tripsReference.collection("places").get()
-            .addOnSuccessListener {result ->
-                for(document in result){
+            .addOnSuccessListener { result ->
+                for (document in result) {
                     placeName = document.data["name"].toString()
                     placeId = document.id
                     placeAddress = document.data["address"].toString()
                     placeTypesArray = ArrayList()
                     val arrayTypes = document.data["types"] as ArrayList<*>
-                    for(type in arrayTypes){
+                    for (type in arrayTypes) {
                         placeTypesArray.add(type.toString())
                     }
                     placeCoordinates = document.data["coordinates"] as GeoPoint
-                    placeDetail = PlaceDetails(placeName, placeId, placeCoordinates, placeTypesArray, placeAddress)
+                    placeDetail = PlaceDetails(
+                        placeName,
+                        placeId,
+                        placeCoordinates,
+                        placeTypesArray,
+                        placeAddress
+                    )
+
                     placeDetailsArray.add(placeDetail)
-                }//end for()
-                for(place in placeDetailsArray){
-                    Log.w(ContentValues.TAG, "placeId: ${place.id}, placeName: ${place.name}, placeAddress: ${place.address}, placeTypes: ${place.types[0]}, coordinates: ${place.coordinates}")
 
                 }
-                displayPlaces()
-            }//end addOnSuccessListener()
-    }
-
-    private fun displayPlaces(){
-        Log.d(ContentValues.TAG, "displayPlaces: array: ${placeDetailsArray}");
-        placeRecyclerView.layoutManager = LinearLayoutManager(this)
-
-        //custom adapter for TripDetails data class
-        var adapter = PlaceAdapter(placeDetailsArray)
-        placeRecyclerView.adapter = adapter
-        adapter.setOnItemClickListener(object: PlaceAdapter.onItemClickListener{
-            override fun onItemClick(position: Int) {
-
+                initFragments()
             }
 
-        })
-    }//end displayPlaces()
+    }//end retrievePlaces()
+
+
+    private fun initFragments() {
+
+        Log.d(ContentValues.TAG, "Test Place Activity: ${placeDetailsArray}");
+
+        //init fragments
+        placesListFragment = PlacesListFragment()
+        placesMapFragment = MapFragment()
+
+        supportFragmentManager.beginTransaction().apply {
+            replace(R.id.flFragment, placesListFragment)
+            commit()
+        }
+
+        btnPlacesList = findViewById(R.id.btnPlacesList)
+        btnPlacesMap = findViewById(R.id.btnPlacesMap)
+
+        btnPlacesList.setOnClickListener{
+            supportFragmentManager.beginTransaction().apply {
+                replace(R.id.flFragment, placesListFragment)
+                commit()
+            }
+        }
+
+        btnPlacesMap.setOnClickListener {
+            supportFragmentManager.beginTransaction().apply {
+                replace(R.id.flFragment, placesMapFragment)
+                commit()
+            }
+        }
+    }//end initFragments()
 
 }//end class
