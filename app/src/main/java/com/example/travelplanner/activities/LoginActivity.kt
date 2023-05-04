@@ -1,4 +1,4 @@
-package com.example.travelplanner
+package com.example.travelplanner.activities
 
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
@@ -7,6 +7,7 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
+import com.example.travelplanner.R
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
@@ -15,6 +16,8 @@ class LoginActivity : AppCompatActivity() {
 
     //auth is used to authenticate users for firebase
     private lateinit var auth: FirebaseAuth
+
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -32,7 +35,9 @@ class LoginActivity : AppCompatActivity() {
         loginButton.setOnClickListener{
             performLogin()
         }
-    }
+    }//end onCreate()
+
+
 
     private fun performLogin() {
         val email: EditText = findViewById(R.id.email_login)
@@ -52,8 +57,10 @@ class LoginActivity : AppCompatActivity() {
             .addOnCompleteListener(this) { task ->
                 if (task.isSuccessful) {
                     // Sign in success, go to TripsActivity to display trips
-                    val intent = Intent(this, TripsActivity::class.java)
+
+                    val intent = Intent(this, DashboardActivity::class.java)
                     startActivity(intent)
+
 
                     Toast.makeText(baseContext, "Welcome ", Toast.LENGTH_SHORT).show()
                 } else {
@@ -67,8 +74,8 @@ class LoginActivity : AppCompatActivity() {
             }
 
 
+    }//end performLogin()
 
-    }
 
 
-}
+}//end class
