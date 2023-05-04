@@ -1,4 +1,4 @@
-package com.example.travelplanner
+package com.example.travelplanner.data
 
 import com.google.firebase.firestore.GeoPoint
 

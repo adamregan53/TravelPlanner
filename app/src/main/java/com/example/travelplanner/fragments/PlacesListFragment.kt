@@ -1,6 +1,5 @@
-package com.example.travelplanner
+package com.example.travelplanner.fragments
 
-import android.content.ClipData.Item
 import android.content.ContentValues
 import android.os.Bundle
 import android.util.Log
@@ -13,7 +12,10 @@ import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.RecyclerView.ViewHolder
-import com.google.android.libraries.places.api.model.Place
+import com.example.travelplanner.data.PlaceDetails
+import com.example.travelplanner.R
+import com.example.travelplanner.activities.PlacesActivity
+import com.example.travelplanner.adapters.PlaceAdapter
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.DocumentReference
@@ -27,27 +29,18 @@ import kotlin.collections.ArrayList
 
 class PlacesListFragment : Fragment() {
 
-    private lateinit var tripId: String
-
     //Firestore
     private lateinit var fStore: FirebaseFirestore
     private lateinit var auth: FirebaseAuth
-    private lateinit var currentUserId: String
     private lateinit var tripsReference: DocumentReference
 
-    private lateinit var testPlacesActivity: TestPlacesActivity
+    private lateinit var PlacesActivity: PlacesActivity
 
     //recycler view
-    private lateinit var placeRecyclerView: RecyclerView
-    private lateinit var adapter:PlaceAdapter
+    private lateinit var placesRecyclerView: RecyclerView
+    private lateinit var adapter: PlaceAdapter
 
     //place details
-    private lateinit var placeName: String
-    private lateinit var placeId: String
-    private lateinit var placeCoordinates: GeoPoint
-    private lateinit var placeTypesArray: ArrayList<String>
-    private lateinit var placeAddress: String
-    private lateinit var placeDetail: PlaceDetails
     private lateinit var placeDetailsArray: ArrayList<PlaceDetails>
 
 
@@ -57,12 +50,12 @@ class PlacesListFragment : Fragment() {
         auth = Firebase.auth
         fStore = Firebase.firestore
 
-        testPlacesActivity = activity as TestPlacesActivity
-        tripsReference = testPlacesActivity.tripsReference
+        PlacesActivity = activity as PlacesActivity
+        tripsReference = PlacesActivity.tripsReference
 
-        placeDetailsArray = testPlacesActivity.placeDetailsArray
+        placeDetailsArray = PlacesActivity.placeDetailsArray
 
-        placeRecyclerView = view?.findViewById<RecyclerView>(R.id.testRecyclerView)!!
+        placesRecyclerView = view?.findViewById<RecyclerView>(R.id.placesRecyclerView)!!
 
         Log.d(ContentValues.TAG, "Place List Fragment: ${placeDetailsArray}");
 
@@ -83,10 +76,10 @@ class PlacesListFragment : Fragment() {
     }//end OnCreateView()
 
     private fun displayPlaces() {
-        placeRecyclerView.layoutManager = LinearLayoutManager(this.testPlacesActivity)
+        placesRecyclerView.layoutManager = LinearLayoutManager(this.PlacesActivity)
 
         adapter = PlaceAdapter(placeDetailsArray)
-        placeRecyclerView.adapter = adapter
+        placesRecyclerView.adapter = adapter
         adapter.setOnItemClickListener(object: PlaceAdapter.onItemClickListener{
             override fun onItemClick(position: Int) {
 
@@ -94,11 +87,11 @@ class PlacesListFragment : Fragment() {
 
         })
 
-        val dividerItemDecoration:DividerItemDecoration = DividerItemDecoration(this.testPlacesActivity, DividerItemDecoration.VERTICAL)
-        placeRecyclerView.addItemDecoration(dividerItemDecoration)
+        val dividerItemDecoration:DividerItemDecoration = DividerItemDecoration(this.PlacesActivity, DividerItemDecoration.VERTICAL)
+        placesRecyclerView.addItemDecoration(dividerItemDecoration)
 
         val itemTouchHelper = ItemTouchHelper(simpleCallback)
-        itemTouchHelper.attachToRecyclerView(placeRecyclerView)
+        itemTouchHelper.attachToRecyclerView(placesRecyclerView)
 
     }//end displayPlaces()
 
@@ -134,7 +127,7 @@ class PlacesListFragment : Fragment() {
                     }
                 }
             }
-        }
+        }//end simpleCallback
 
 
 }//end class

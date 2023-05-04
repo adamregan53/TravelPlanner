@@ -1,29 +1,19 @@
-package com.example.travelplanner
+package com.example.travelplanner.activities
 
-import android.content.ContentValues
 import android.content.ContentValues.TAG
 import android.content.Intent
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
-import android.view.LayoutInflater
-import android.view.MenuItem
-import android.view.View
-import android.view.View.inflate
 import android.widget.Button
-import android.widget.TextView
 import android.widget.Toast
-import android.widget.Toolbar
-import androidx.appcompat.app.ActionBarDrawerToggle
-import androidx.appcompat.resources.Compatibility.Api21Impl.inflate
-import androidx.core.view.GravityCompat
-import androidx.drawerlayout.widget.DrawerLayout
+import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.example.travelplanner.databinding.ActivityLoginBinding.inflate
+import com.example.travelplanner.R
+import com.example.travelplanner.data.Singleton
+import com.example.travelplanner.adapters.TripAdapter
+import com.example.travelplanner.data.TripDetails
 import com.example.travelplanner.databinding.ActivityTripsBinding
-import com.google.android.material.navigation.NavigationBarItemView
-import com.google.android.material.navigation.NavigationView
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.DocumentReference
@@ -31,24 +21,25 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.GeoPoint
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
-import org.w3c.dom.Text
-import java.util.zip.Inflater
 
 class TripsActivity : DrawerBaseActivity(){//end class
 
+    //firebase
     private lateinit var fStore: FirebaseFirestore
     private lateinit var auth: FirebaseAuth
     private lateinit var currentUserId: String
 
-    private lateinit var newRecyclerView: RecyclerView
+    //recycler view
+    private lateinit var tripsRecyclerView: RecyclerView
 
+    //trip data
     private lateinit var tripId: String
     private lateinit var tripName: String
     private lateinit var tripCoordinates: GeoPoint
     private lateinit var tripsList: ArrayList<TripDetails>
 
+    //layout
     private lateinit var newTripBtn: Button
-
     private lateinit var activityTripsBinding: ActivityTripsBinding
 
 
@@ -63,7 +54,7 @@ class TripsActivity : DrawerBaseActivity(){//end class
         fStore = Firebase.firestore
         currentUserId = auth.currentUser?.uid.toString()
 
-        newRecyclerView = findViewById(R.id.recyclerView)
+        tripsRecyclerView = findViewById(R.id.tripsRecyclerView)
 
         //tripsList = arrayListOf<TripDetails>()
         tripsList = Singleton.tripsList
@@ -121,12 +112,12 @@ class TripsActivity : DrawerBaseActivity(){//end class
 
     private fun displayTrips() {
 
-        newRecyclerView.layoutManager = LinearLayoutManager(this)
+        tripsRecyclerView.layoutManager = LinearLayoutManager(this)
 
         //custom adapter for TripDetails data class
         var adapter = TripAdapter(tripsList)
-        newRecyclerView.adapter = adapter
-        adapter.setOnItemClickListener(object: TripAdapter.onItemClickListener{
+        tripsRecyclerView.adapter = adapter
+        adapter.setOnItemClickListener(object: TripAdapter.onItemClickListener {
             override fun onItemClick(position: Int) {
                 //Toast.makeText(this@TripsActivity, "You clicked on ${tripsList[position].trip_name}", Toast.LENGTH_SHORT).show()
                 val tripId = tripsList[position].id
@@ -134,7 +125,7 @@ class TripsActivity : DrawerBaseActivity(){//end class
                 val coordinates = tripsList[position].coordinates
                 Log.w(TAG, "tripId: $tripId, tripName: $tripName, coordinates: $coordinates")
 
-                val intent =Intent(this@TripsActivity, TestPlacesActivity::class.java)
+                val intent =Intent(this@TripsActivity, PlacesActivity::class.java)
                 intent.putExtra("tripId", tripId)//used for Firebase Document Reference
                 intent.putExtra("tripLatitude", coordinates.latitude)
                 intent.putExtra("tripLongitude", coordinates.longitude)
@@ -142,6 +133,10 @@ class TripsActivity : DrawerBaseActivity(){//end class
             }
 
         })
+
+        val dividerItemDecoration: DividerItemDecoration = DividerItemDecoration(this, DividerItemDecoration.VERTICAL)
+        tripsRecyclerView.addItemDecoration(dividerItemDecoration)
+
     }//end displayTrips()
 
 

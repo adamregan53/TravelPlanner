@@ -1,4 +1,4 @@
-package com.example.travelplanner
+package com.example.travelplanner.fragments
 
 import android.content.ContentValues
 import android.os.Bundle
@@ -12,7 +12,10 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.cardview.widget.CardView
 import androidx.core.app.ActivityCompat
-import androidx.core.view.get
+import com.example.travelplanner.BuildConfig
+import com.example.travelplanner.data.PlaceDetails
+import com.example.travelplanner.R
+import com.example.travelplanner.activities.PlacesActivity
 
 import com.google.android.gms.common.api.Status
 import com.google.android.gms.maps.*
@@ -35,7 +38,7 @@ import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 
 
-class MapFragment : Fragment(), OnMapReadyCallback,
+class PlacesMapFragment : Fragment(), OnMapReadyCallback,
     ActivityCompat.OnRequestPermissionsResultCallback {
 
     private lateinit var googleMap:GoogleMap
@@ -45,7 +48,7 @@ class MapFragment : Fragment(), OnMapReadyCallback,
     private lateinit var auth: FirebaseAuth
     private lateinit var tripsReference: DocumentReference
 
-    private lateinit var testPlacesActivity: TestPlacesActivity
+    private lateinit var PlacesActivity: PlacesActivity
     private var tripLatitude: Double = 0.0
     private var tripLongitude: Double = 0.0
 
@@ -55,7 +58,6 @@ class MapFragment : Fragment(), OnMapReadyCallback,
     private lateinit var placeTypesArray: ArrayList<String>
     private lateinit var placeAddress: String
     private lateinit var placeOpeningHours: OpeningHours
-    private lateinit var placeDetail: PlaceDetails
     private lateinit var placeDetailsArray: ArrayList<PlaceDetails>
 
     //view components
@@ -74,15 +76,15 @@ class MapFragment : Fragment(), OnMapReadyCallback,
         mapView.getMapAsync(this)
 
         //retrieve data from Activity
-        testPlacesActivity = activity as TestPlacesActivity
-        tripsReference = testPlacesActivity.tripsReference
-        tripLatitude = testPlacesActivity.tripLatitude
-        tripLongitude = testPlacesActivity.tripLongitude
+        PlacesActivity = activity as PlacesActivity
+        tripsReference = PlacesActivity.tripsReference
+        tripLatitude = PlacesActivity.tripLatitude
+        tripLongitude = PlacesActivity.tripLongitude
 
         auth = Firebase.auth
         fStore = Firebase.firestore
 
-        placeDetailsArray = testPlacesActivity.placeDetailsArray
+        placeDetailsArray = PlacesActivity.placeDetailsArray
 
         //init buttons
         addBtn = requireView().findViewById(R.id.addBtn)
@@ -99,12 +101,13 @@ class MapFragment : Fragment(), OnMapReadyCallback,
 
     }//end onActivityCreated()
 
+
     private fun initPlacesAutocomplete() {
         if(!Places.isInitialized()){
-            Places.initialize(this.testPlacesActivity, BuildConfig.MAPS_API_KEY)
+            Places.initialize(this.PlacesActivity, BuildConfig.MAPS_API_KEY)
         }
 
-        val placesClient: PlacesClient = Places.createClient(this.testPlacesActivity)
+        val placesClient: PlacesClient = Places.createClient(this.PlacesActivity)
 
         //childFragmentManger includes SupportFragmentManager which allows this to work inside a fragment
         val autoCompleteFragment = childFragmentManager.findFragmentById(R.id.autocomplete_fragment_test) as AutocompleteSupportFragment
@@ -165,7 +168,6 @@ class MapFragment : Fragment(), OnMapReadyCallback,
                     Log.i("Place Opening Hours", "${openingHours}")
                 }
 
-
                 val placeDetail = PlaceDetails(placeName, placeId, placeCoordinates, placeTypesArray, placeAddress)
 
                 //set marker and animate camera
@@ -222,14 +224,16 @@ class MapFragment : Fragment(), OnMapReadyCallback,
         })
     }//end initAutocompletePlaces()
 
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
         // Inflate the layout for this fragment
 
-        return inflater.inflate(R.layout.fragment_map, container, false)
+        return inflater.inflate(R.layout.fragment_places_map, container, false)
     }//end onCreateView()
+
 
     override fun onMapReady(map: GoogleMap) {
         //this works so don't touch it
@@ -269,6 +273,7 @@ class MapFragment : Fragment(), OnMapReadyCallback,
         }
     }//end onMapReady()
 
+
     private fun displayPlaceMarkers() {
         Log.d(ContentValues.TAG, "Map Fragment: ${placeDetailsArray}");
 
@@ -281,5 +286,6 @@ class MapFragment : Fragment(), OnMapReadyCallback,
                 )
             }
     }//end displayMarkers()
+
 
 }//end class

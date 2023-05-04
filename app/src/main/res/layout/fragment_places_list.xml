@@ -4,19 +4,10 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    tools:context=".PlacesListFragment">
-
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Places List"
-        android:textAlignment="center"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+    tools:context=".fragments.PlacesListFragment">
 
     <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/testRecyclerView"
+        android:id="@+id/placesRecyclerView"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 

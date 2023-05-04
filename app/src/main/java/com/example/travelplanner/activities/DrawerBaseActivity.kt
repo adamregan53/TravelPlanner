@@ -1,24 +1,17 @@
-package com.example.travelplanner
+package com.example.travelplanner.activities
 
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
-import android.os.Bundle
 import android.util.Log
-import android.view.LayoutInflater
 import android.view.MenuItem
 import android.view.View
 import android.widget.FrameLayout
-import android.widget.LinearLayout
-import android.widget.TextView
 import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.appcompat.widget.Toolbar
 import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
+import com.example.travelplanner.R
 import com.google.android.material.navigation.NavigationView
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.ktx.auth
-import com.google.firebase.ktx.Firebase
-import org.w3c.dom.Text
 
 open class DrawerBaseActivity : AppCompatActivity() {
     lateinit var drawerLayout: DrawerLayout
@@ -35,7 +28,10 @@ open class DrawerBaseActivity : AppCompatActivity() {
         setSupportActionBar(toolBar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
-        actionBarDrawerToggle = ActionBarDrawerToggle(this, drawerLayout, R.string.menu_Open, R.string.close_menu)
+        actionBarDrawerToggle = ActionBarDrawerToggle(this, drawerLayout,
+            R.string.menu_Open,
+            R.string.close_menu
+        )
         drawerLayout.addDrawerListener(actionBarDrawerToggle)
         actionBarDrawerToggle.syncState()
 

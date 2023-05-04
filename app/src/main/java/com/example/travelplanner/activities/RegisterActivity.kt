@@ -1,4 +1,4 @@
-package com.example.travelplanner
+package com.example.travelplanner.activities
 
 import android.content.ContentValues.TAG
 import android.content.Intent
@@ -9,6 +9,7 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
+import com.example.travelplanner.R
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.DocumentReference
@@ -99,7 +100,7 @@ class RegisterActivity : AppCompatActivity() {
             .addOnFailureListener{
                 Toast.makeText(this, "Error Occured ${it.localizedMessage}", Toast.LENGTH_SHORT).show()
             }
-    }
+    }//end performSignUp()
 
 
-}
+}//end class
