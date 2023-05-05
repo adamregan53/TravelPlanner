@@ -4,6 +4,7 @@ import android.content.ContentValues.TAG
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
+import android.view.View
 import android.widget.Button
 import android.widget.Toast
 import androidx.recyclerview.widget.DividerItemDecoration
@@ -14,6 +15,7 @@ import com.example.travelplanner.data.Singleton
 import com.example.travelplanner.adapters.TripAdapter
 import com.example.travelplanner.data.TripDetails
 import com.example.travelplanner.databinding.ActivityTripsBinding
+import com.example.travelplanner.fragments.NewTripMapFragment
 import com.example.travelplanner.fragments.TripsListFragment
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
@@ -30,9 +32,6 @@ class TripsActivity : DrawerBaseActivity(){//end class
     private lateinit var auth: FirebaseAuth
     private lateinit var currentUserId: String
 
-    //recycler view
-    private lateinit var tripsRecyclerView: RecyclerView
-
     //trip data
     private lateinit var tripId: String
     private lateinit var tripName: String
@@ -40,7 +39,7 @@ class TripsActivity : DrawerBaseActivity(){//end class
     lateinit var tripsList: ArrayList<TripDetails>
 
     //layout
-    private lateinit var newTripBtn: Button
+
     private lateinit var activityTripsBinding: ActivityTripsBinding
 
     //init fragments
@@ -61,7 +60,7 @@ class TripsActivity : DrawerBaseActivity(){//end class
 
         //tripsList = arrayListOf<TripDetails>()
         tripsList = Singleton.tripsList
-        newTripBtn = this.findViewById(R.id.new_trip_btn)
+
 
         retrieveTrips()
 
@@ -120,6 +119,7 @@ class TripsActivity : DrawerBaseActivity(){//end class
             replace(R.id.tripsFlFragment, tripsListFragment)
             commit()
         }
+
 
     }//end initFragments()
 

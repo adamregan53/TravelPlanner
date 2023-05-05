@@ -1,5 +1,6 @@
 package com.example.travelplanner.fragments
 
+import android.content.ContentValues
 import android.content.ContentValues.TAG
 import android.content.Intent
 import android.os.Bundle
@@ -8,6 +9,7 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Button
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -31,6 +33,8 @@ class TripsListFragment : Fragment() {
     private lateinit var auth: FirebaseAuth
 
     private lateinit var tripsActivity: TripsActivity
+    private lateinit var newTripMapFragment: NewTripMapFragment
+    private lateinit var newTripBtn: Button
 
     //recycler view
     private lateinit var tripsRecyclerView: RecyclerView
@@ -42,13 +46,14 @@ class TripsListFragment : Fragment() {
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
-
+        Log.d(ContentValues.TAG, "TripsListFragment Started");
         auth = Firebase.auth
         fStore = Firebase.firestore
 
         tripsActivity = activity as TripsActivity
 
         tripsList = tripsActivity.tripsList
+        newTripBtn = view?.findViewById(R.id.new_trip_btn)!!
 
         tripsRecyclerView = view?.findViewById(R.id.tripsRecyclerView)!!
 
@@ -65,10 +70,12 @@ class TripsListFragment : Fragment() {
         return inflater.inflate(R.layout.fragment_trips_list, container, false)
     }//end onCreateView()
 
+
+
     private fun displayTrips() {
         tripsRecyclerView.layoutManager = LinearLayoutManager(this.tripsActivity)
         //custom adapter for TripDetails data class
-        var adapter = TripAdapter(tripsList)
+        adapter = TripAdapter(tripsList)
         tripsRecyclerView.adapter = adapter
         adapter.setOnItemClickListener(object: TripAdapter.onItemClickListener {
             override fun onItemClick(position: Int) {
@@ -89,7 +96,24 @@ class TripsListFragment : Fragment() {
 
         val dividerItemDecoration: DividerItemDecoration = DividerItemDecoration(this.tripsActivity, DividerItemDecoration.VERTICAL)
         tripsRecyclerView.addItemDecoration(dividerItemDecoration)
+
+        initFragments()
+
     }//end displayTrips()
+
+
+
+    private fun initFragments() {
+        newTripMapFragment = NewTripMapFragment()
+
+        newTripBtn.setOnClickListener{
+            Log.d(ContentValues.TAG, "Attempting to load NewTripMapFragment");
+            tripsActivity.supportFragmentManager.beginTransaction().apply {
+                replace(R.id.tripsFlFragment, newTripMapFragment)
+                commit()
+            }
+        }
+    }
 
 
 }//end class
