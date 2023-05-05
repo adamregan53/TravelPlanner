@@ -14,6 +14,7 @@ import com.example.travelplanner.data.Singleton
 import com.example.travelplanner.adapters.TripAdapter
 import com.example.travelplanner.data.TripDetails
 import com.example.travelplanner.databinding.ActivityTripsBinding
+import com.example.travelplanner.fragments.TripsListFragment
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.DocumentReference
@@ -36,11 +37,14 @@ class TripsActivity : DrawerBaseActivity(){//end class
     private lateinit var tripId: String
     private lateinit var tripName: String
     private lateinit var tripCoordinates: GeoPoint
-    private lateinit var tripsList: ArrayList<TripDetails>
+    lateinit var tripsList: ArrayList<TripDetails>
 
     //layout
     private lateinit var newTripBtn: Button
     private lateinit var activityTripsBinding: ActivityTripsBinding
+
+    //init fragments
+    private lateinit var tripsListFragment: TripsListFragment
 
 
 
@@ -54,7 +58,6 @@ class TripsActivity : DrawerBaseActivity(){//end class
         fStore = Firebase.firestore
         currentUserId = auth.currentUser?.uid.toString()
 
-        tripsRecyclerView = findViewById(R.id.tripsRecyclerView)
 
         //tripsList = arrayListOf<TripDetails>()
         tripsList = Singleton.tripsList
@@ -86,7 +89,7 @@ class TripsActivity : DrawerBaseActivity(){//end class
 
                     Log.w(TAG, "Retrieved trips from Firebase")
 
-                    displayTrips()
+                    initFragments()
 
                 }
                 .addOnFailureListener{
@@ -102,7 +105,7 @@ class TripsActivity : DrawerBaseActivity(){//end class
             }
             Log.w(TAG, "Retrieved trips from Singleton")
 
-            displayTrips()
+            initFragments()
         }
 
 
@@ -110,35 +113,15 @@ class TripsActivity : DrawerBaseActivity(){//end class
 
 
 
-    private fun displayTrips() {
+    private fun initFragments() {
+        tripsListFragment = TripsListFragment()
 
-        tripsRecyclerView.layoutManager = LinearLayoutManager(this)
+        supportFragmentManager.beginTransaction().apply {
+            replace(R.id.tripsFlFragment, tripsListFragment)
+            commit()
+        }
 
-        //custom adapter for TripDetails data class
-        var adapter = TripAdapter(tripsList)
-        tripsRecyclerView.adapter = adapter
-        adapter.setOnItemClickListener(object: TripAdapter.onItemClickListener {
-            override fun onItemClick(position: Int) {
-                //Toast.makeText(this@TripsActivity, "You clicked on ${tripsList[position].trip_name}", Toast.LENGTH_SHORT).show()
-                val tripId = tripsList[position].id
-                val tripName = tripsList[position].name
-                val coordinates = tripsList[position].coordinates
-                Log.w(TAG, "tripId: $tripId, tripName: $tripName, coordinates: $coordinates")
-
-                val intent =Intent(this@TripsActivity, PlacesActivity::class.java)
-                intent.putExtra("tripId", tripId)//used for Firebase Document Reference
-                intent.putExtra("tripLatitude", coordinates.latitude)
-                intent.putExtra("tripLongitude", coordinates.longitude)
-                startActivity(intent)
-            }
-
-        })
-
-        val dividerItemDecoration: DividerItemDecoration = DividerItemDecoration(this, DividerItemDecoration.VERTICAL)
-        tripsRecyclerView.addItemDecoration(dividerItemDecoration)
-
-    }//end displayTrips()
-
+    }//end initFragments()
 
 
 }//end class

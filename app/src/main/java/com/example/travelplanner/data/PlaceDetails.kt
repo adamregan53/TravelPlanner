@@ -1,5 +1,6 @@
 package com.example.travelplanner.data
 
+import com.google.android.libraries.places.api.model.OpeningHours
 import com.google.firebase.firestore.GeoPoint
 
 data class PlaceDetails(

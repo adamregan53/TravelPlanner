@@ -41,14 +41,16 @@ import com.google.firebase.ktx.Firebase
 class PlacesMapFragment : Fragment(), OnMapReadyCallback,
     ActivityCompat.OnRequestPermissionsResultCallback {
 
+    //google maps api
     private lateinit var googleMap:GoogleMap
     private lateinit var mapView: MapView
 
+    //firebase
     private lateinit var fStore: FirebaseFirestore
     private lateinit var auth: FirebaseAuth
     private lateinit var tripsReference: DocumentReference
 
-    private lateinit var PlacesActivity: PlacesActivity
+    private lateinit var placesActivity: PlacesActivity
     private var tripLatitude: Double = 0.0
     private var tripLongitude: Double = 0.0
 
@@ -69,22 +71,22 @@ class PlacesMapFragment : Fragment(), OnMapReadyCallback,
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
-        mapView = view?.findViewById<MapView>(R.id.map_view)!!
+        mapView = view?.findViewById(R.id.map_view)!!
         mapView.onCreate(savedInstanceState)
         mapView.onResume()
 
         mapView.getMapAsync(this)
 
         //retrieve data from Activity
-        PlacesActivity = activity as PlacesActivity
-        tripsReference = PlacesActivity.tripsReference
-        tripLatitude = PlacesActivity.tripLatitude
-        tripLongitude = PlacesActivity.tripLongitude
+        placesActivity = activity as PlacesActivity
+        tripsReference = placesActivity.tripsReference
+        tripLatitude = placesActivity.tripLatitude
+        tripLongitude = placesActivity.tripLongitude
 
         auth = Firebase.auth
         fStore = Firebase.firestore
 
-        placeDetailsArray = PlacesActivity.placeDetailsArray
+        placeDetailsArray = placesActivity.placeDetailsArray
 
         //init buttons
         addBtn = requireView().findViewById(R.id.addBtn)
@@ -104,10 +106,10 @@ class PlacesMapFragment : Fragment(), OnMapReadyCallback,
 
     private fun initPlacesAutocomplete() {
         if(!Places.isInitialized()){
-            Places.initialize(this.PlacesActivity, BuildConfig.MAPS_API_KEY)
+            Places.initialize(this.placesActivity, BuildConfig.MAPS_API_KEY)
         }
 
-        val placesClient: PlacesClient = Places.createClient(this.PlacesActivity)
+        val placesClient: PlacesClient = Places.createClient(this.placesActivity)
 
         //childFragmentManger includes SupportFragmentManager which allows this to work inside a fragment
         val autoCompleteFragment = childFragmentManager.findFragmentById(R.id.autocomplete_fragment_test) as AutocompleteSupportFragment
@@ -278,13 +280,13 @@ class PlacesMapFragment : Fragment(), OnMapReadyCallback,
         Log.d(ContentValues.TAG, "Map Fragment: ${placeDetailsArray}");
 
         for(place in placeDetailsArray){
-                val placeLocation = LatLng(place.coordinates.latitude, place.coordinates.longitude)
-                googleMap.addMarker(
-                    MarkerOptions()
-                        .position(placeLocation)
-                        .title(place.name)
-                )
-            }
+            val placeLocation = LatLng(place.coordinates.latitude, place.coordinates.longitude)
+            googleMap.addMarker(
+                MarkerOptions()
+                    .position(placeLocation)
+                    .title(place.name)
+            )
+        }
     }//end displayMarkers()
 
 

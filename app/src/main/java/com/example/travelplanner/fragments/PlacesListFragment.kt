@@ -34,7 +34,7 @@ class PlacesListFragment : Fragment() {
     private lateinit var auth: FirebaseAuth
     private lateinit var tripsReference: DocumentReference
 
-    private lateinit var PlacesActivity: PlacesActivity
+    private lateinit var placesActivity: PlacesActivity
 
     //recycler view
     private lateinit var placesRecyclerView: RecyclerView
@@ -50,16 +50,14 @@ class PlacesListFragment : Fragment() {
         auth = Firebase.auth
         fStore = Firebase.firestore
 
-        PlacesActivity = activity as PlacesActivity
-        tripsReference = PlacesActivity.tripsReference
+        placesActivity = activity as PlacesActivity
+        tripsReference = placesActivity.tripsReference
 
-        placeDetailsArray = PlacesActivity.placeDetailsArray
+        placeDetailsArray = placesActivity.placeDetailsArray
 
-        placesRecyclerView = view?.findViewById<RecyclerView>(R.id.placesRecyclerView)!!
+        placesRecyclerView = view?.findViewById(R.id.placesRecyclerView)!!
 
         Log.d(ContentValues.TAG, "Place List Fragment: ${placeDetailsArray}");
-
-
 
         displayPlaces()
     }//end onActivityCreated()
@@ -76,7 +74,7 @@ class PlacesListFragment : Fragment() {
     }//end OnCreateView()
 
     private fun displayPlaces() {
-        placesRecyclerView.layoutManager = LinearLayoutManager(this.PlacesActivity)
+        placesRecyclerView.layoutManager = LinearLayoutManager(this.placesActivity)
 
         adapter = PlaceAdapter(placeDetailsArray)
         placesRecyclerView.adapter = adapter
@@ -87,7 +85,7 @@ class PlacesListFragment : Fragment() {
 
         })
 
-        val dividerItemDecoration:DividerItemDecoration = DividerItemDecoration(this.PlacesActivity, DividerItemDecoration.VERTICAL)
+        val dividerItemDecoration = DividerItemDecoration(this.placesActivity, DividerItemDecoration.VERTICAL)
         placesRecyclerView.addItemDecoration(dividerItemDecoration)
 
         val itemTouchHelper = ItemTouchHelper(simpleCallback)
@@ -97,7 +95,7 @@ class PlacesListFragment : Fragment() {
 
 
     //change order of recycler view
-    val simpleCallback = object : ItemTouchHelper.SimpleCallback(
+    private val simpleCallback = object : ItemTouchHelper.SimpleCallback(
             ItemTouchHelper.UP or ItemTouchHelper.DOWN or
                     ItemTouchHelper.START or ItemTouchHelper.END, ItemTouchHelper.LEFT
         ) {

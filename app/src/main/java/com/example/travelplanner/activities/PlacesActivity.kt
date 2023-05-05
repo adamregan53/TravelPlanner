@@ -24,7 +24,7 @@ class PlacesActivity : DrawerBaseActivity() {
     private lateinit var fStore: FirebaseFirestore
     private lateinit var auth: FirebaseAuth
     private lateinit var currentUserId: String
-    lateinit var tripsReference: DocumentReference
+    lateinit var tripsReference: DocumentReference private set
 
     //Values From TripsActivity
     private lateinit var tripId: String
@@ -64,11 +64,9 @@ class PlacesActivity : DrawerBaseActivity() {
             .collection("trips")
             .document(tripId)
 
-        placeDetailsArray = arrayListOf<PlaceDetails>()
-
+        placeDetailsArray = arrayListOf()
 
         retrievePlaces()
-
 
     }//end onCreate()
 
@@ -120,11 +118,9 @@ class PlacesActivity : DrawerBaseActivity() {
                 }
             }
 
-            override fun onTabUnselected(tab: TabLayout.Tab?) {
-            }
+            override fun onTabUnselected(tab: TabLayout.Tab?) {}
 
-            override fun onTabReselected(tab: TabLayout.Tab?) {
-            }
+            override fun onTabReselected(tab: TabLayout.Tab?) {}
 
         })
 
