@@ -8,7 +8,7 @@ import com.example.travelplanner.fragments.PlacesMapFragment
 import androidx.viewpager2.adapter.FragmentStateAdapter as FragmentStateAdapter
 
 
-class ViewPagerAdapter(fragmentManager: FragmentManager, lifecycle:Lifecycle): FragmentStateAdapter(fragmentManager, lifecycle)  {
+class ViewPagerAdapter(fragmentManager: FragmentManager, lifecycle:Lifecycle, ): FragmentStateAdapter(fragmentManager, lifecycle) {
 
     override fun getItemCount(): Int {
         return 2
@@ -27,5 +27,7 @@ class ViewPagerAdapter(fragmentManager: FragmentManager, lifecycle:Lifecycle): F
             }
         }
     }//end createFragment()
+
+
 
 }//end class

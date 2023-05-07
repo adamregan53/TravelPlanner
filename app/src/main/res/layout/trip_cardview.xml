@@ -16,20 +16,39 @@
 
         <TextView
             android:id="@+id/trip_title"
+            android:text="New York"
             android:layout_width="match_parent"
-            android:layout_height="39dp"
+            android:layout_height="wrap_content"
             android:textSize="30sp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
         <TextView
-            android:id="@+id/trip_detail"
-            android:layout_width="match_parent"
-            android:layout_height="16dp"
+            android:id="@+id/trip_start_date"
+            android:text="start"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
-            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/trip_title" />
+
+        <TextView
+            android:id="@+id/dash_trip_dates"
+            android:text=" - "
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            app:layout_constraintLeft_toRightOf="@+id/trip_start_date"
+            app:layout_constraintTop_toBottomOf="@+id/trip_title" />
+
+        <TextView
+            android:id="@+id/trip_end_date"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="end"
+            app:layout_constraintLeft_toRightOf="@+id/dash_trip_dates"
             app:layout_constraintTop_toBottomOf="@+id/trip_title" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>

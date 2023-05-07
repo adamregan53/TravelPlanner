@@ -44,6 +44,7 @@ class TripsListFragment : Fragment() {
     private lateinit var tripsList: ArrayList<TripDetails>
 
 
+
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
         Log.d(ContentValues.TAG, "TripsListFragment Started");
@@ -60,6 +61,7 @@ class TripsListFragment : Fragment() {
         displayTrips()
 
     }//end onActivityCreated()
+
 
 
     override fun onCreateView(
@@ -83,7 +85,9 @@ class TripsListFragment : Fragment() {
                 val tripId = tripsList[position].id
                 val tripName = tripsList[position].name
                 val coordinates = tripsList[position].coordinates
-                Log.w(TAG, "tripId: $tripId, tripName: $tripName, coordinates: $coordinates")
+                val startDate = tripsList[position].startDate
+                val endDate = tripsList[position].endDate
+                Log.w(TAG, "tripId: $tripId, tripName: $tripName, coordinates: $coordinates, startDate: $startDate, endDate $endDate")
 
                 val intent = Intent(tripsActivity, PlacesActivity::class.java)
                 intent.putExtra("tripId", tripId)//used for Firebase Document Reference

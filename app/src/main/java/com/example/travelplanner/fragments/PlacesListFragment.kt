@@ -7,6 +7,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.MutableLiveData
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -16,18 +17,18 @@ import com.example.travelplanner.data.PlaceDetails
 import com.example.travelplanner.R
 import com.example.travelplanner.activities.PlacesActivity
 import com.example.travelplanner.adapters.PlaceAdapter
+import com.example.travelplanner.data.SharedData
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.GeoPoint
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import java.util.*
 import kotlin.collections.ArrayList
 
 
-class PlacesListFragment : Fragment() {
+class PlacesListFragment() : Fragment() {
 
     //Firestore
     private lateinit var fStore: FirebaseFirestore
@@ -35,6 +36,7 @@ class PlacesListFragment : Fragment() {
     private lateinit var tripsReference: DocumentReference
 
     private lateinit var placesActivity: PlacesActivity
+    private lateinit var placeMapFragment: PlacesMapFragment
 
     //recycler view
     private lateinit var placesRecyclerView: RecyclerView
@@ -51,11 +53,13 @@ class PlacesListFragment : Fragment() {
         fStore = Firebase.firestore
 
         placesActivity = activity as PlacesActivity
+        placeMapFragment = PlacesMapFragment()
         tripsReference = placesActivity.tripsReference
 
         placeDetailsArray = placesActivity.placeDetailsArray
 
         placesRecyclerView = view?.findViewById(R.id.placesRecyclerView)!!
+
 
         Log.d(ContentValues.TAG, "Place List Fragment: ${placeDetailsArray}");
 
@@ -73,6 +77,21 @@ class PlacesListFragment : Fragment() {
 
     }//end OnCreateView()
 
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+    }
+
+    override fun onStart() {
+        super.onStart()
+    }
+
+
+
+    override fun onResume() {
+        super.onResume()
+    }
+
     private fun displayPlaces() {
         placesRecyclerView.layoutManager = LinearLayoutManager(this.placesActivity)
 
@@ -80,6 +99,9 @@ class PlacesListFragment : Fragment() {
         placesRecyclerView.adapter = adapter
         adapter.setOnItemClickListener(object: PlaceAdapter.onItemClickListener{
             override fun onItemClick(position: Int) {
+                //switch tab to map view
+                val tabIndex = placesActivity.tabLayout.getTabAt(1)
+                placesActivity.tabLayout.selectTab(tabIndex)
 
             }
 

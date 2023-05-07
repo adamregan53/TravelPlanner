@@ -1,22 +1,16 @@
 package com.example.travelplanner.activities
 
 import android.content.ContentValues.TAG
-import android.content.Intent
 import android.os.Bundle
 import android.util.Log
-import android.view.View
-import android.widget.Button
 import android.widget.Toast
-import androidx.recyclerview.widget.DividerItemDecoration
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
 import com.example.travelplanner.R
-import com.example.travelplanner.data.Singleton
-import com.example.travelplanner.adapters.TripAdapter
+import com.example.travelplanner.data.SharedData
 import com.example.travelplanner.data.TripDetails
 import com.example.travelplanner.databinding.ActivityTripsBinding
-import com.example.travelplanner.fragments.NewTripMapFragment
+import com.example.travelplanner.fragments.TestExpandingList
 import com.example.travelplanner.fragments.TripsListFragment
+import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.DocumentReference
@@ -36,6 +30,8 @@ class TripsActivity : DrawerBaseActivity(){//end class
     private lateinit var tripId: String
     private lateinit var tripName: String
     private lateinit var tripCoordinates: GeoPoint
+    private lateinit var startDate: Timestamp
+    private lateinit var endDate: Timestamp
     lateinit var tripsList: ArrayList<TripDetails>
 
     //layout
@@ -59,7 +55,7 @@ class TripsActivity : DrawerBaseActivity(){//end class
 
 
         //tripsList = arrayListOf<TripDetails>()
-        tripsList = Singleton.tripsList
+        tripsList = SharedData.tripsList
 
 
         retrieveTrips()
@@ -69,9 +65,9 @@ class TripsActivity : DrawerBaseActivity(){//end class
 
 
     private fun retrieveTrips() {
-        if(Singleton.tripsList.isEmpty()){
+        if(SharedData.tripsList.isEmpty()){
             //reference to user document in database
-            Log.d(TAG, "tripsList isEmpty: ${Singleton.tripsList.isEmpty()}");
+            Log.d(TAG, "tripsList isEmpty: ${SharedData.tripsList.isEmpty()}");
 
             val userReference: DocumentReference = fStore.collection("users").document(currentUserId)
             userReference.collection("trips").get()
@@ -82,7 +78,9 @@ class TripsActivity : DrawerBaseActivity(){//end class
                         tripId = document.id
                         tripName = document.data["trip_name"].toString()
                         tripCoordinates = document.data["coordinates"] as GeoPoint
-                        val tripDetail = TripDetails(tripId, tripName, tripCoordinates)
+                        startDate = document.data["startDate"] as Timestamp
+                        endDate = document.data["endDate"] as Timestamp
+                        val tripDetail = TripDetails(tripId, tripName, tripCoordinates, startDate, endDate)
                         tripsList.add(tripDetail)
                     }
 
@@ -101,6 +99,8 @@ class TripsActivity : DrawerBaseActivity(){//end class
                 tripId = trip.id
                 tripName = trip.name
                 tripCoordinates = trip.coordinates
+                startDate = trip.startDate
+                endDate = trip.endDate
             }
             Log.w(TAG, "Retrieved trips from Singleton")
 
@@ -114,6 +114,7 @@ class TripsActivity : DrawerBaseActivity(){//end class
 
     private fun initFragments() {
         tripsListFragment = TripsListFragment()
+        val testExpandingList: TestExpandingList = TestExpandingList()
 
         supportFragmentManager.beginTransaction().apply {
             replace(R.id.tripsFlFragment, tripsListFragment)

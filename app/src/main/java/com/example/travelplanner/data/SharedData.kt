@@ -1,6 +1,8 @@
 package com.example.travelplanner.data
 
-object Singleton {
+import com.google.android.gms.maps.GoogleMap
+
+object SharedData {
     var tripsList: ArrayList<TripDetails> = arrayListOf()
     var placesList: ArrayList<ArrayList<PlaceDetails>> = arrayListOf()
 }

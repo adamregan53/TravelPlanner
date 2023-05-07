@@ -1,6 +1,8 @@
 package com.example.travelplanner.activities
 
+import android.content.ContentValues
 import android.os.Bundle
+import android.util.Log
 import androidx.viewpager2.widget.ViewPager2
 import com.example.travelplanner.data.PlaceDetails
 import com.example.travelplanner.R
@@ -16,7 +18,7 @@ import com.google.firebase.firestore.GeoPoint
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 
-class PlacesActivity : DrawerBaseActivity() {
+class PlacesActivity : DrawerBaseActivity() {//end class
 
     private lateinit var binding: ActivityPlacesBinding
 
@@ -41,7 +43,7 @@ class PlacesActivity : DrawerBaseActivity() {
     private lateinit var placeDetail: PlaceDetails
     lateinit var placeDetailsArray: ArrayList<PlaceDetails>
 
-    private lateinit var tabLayout: TabLayout
+    lateinit var tabLayout: TabLayout
     private lateinit var viewPager2: ViewPager2
     private lateinit var viewPagerAdapter: ViewPagerAdapter
 
@@ -115,6 +117,7 @@ class PlacesActivity : DrawerBaseActivity() {
             override fun onTabSelected(tab: TabLayout.Tab?) {
                 if (tab != null) {
                     viewPager2.currentItem = tab.position
+
                 }
             }
 
@@ -122,16 +125,18 @@ class PlacesActivity : DrawerBaseActivity() {
 
             override fun onTabReselected(tab: TabLayout.Tab?) {}
 
+
         })
 
         viewPager2.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback(){
             override fun onPageSelected(position: Int) {
                 super.onPageSelected(position)
                 tabLayout.selectTab(tabLayout.getTabAt(position))
+                Log.d(ContentValues.TAG, "PlacesActivity, OnPageChangeCallback: $position");
             }
         })
 
     }//end initFragments()
 
 
-}//end class
+}

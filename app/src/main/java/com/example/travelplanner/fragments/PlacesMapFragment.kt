@@ -12,10 +12,14 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.cardview.widget.CardView
 import androidx.core.app.ActivityCompat
+import androidx.core.view.get
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.Observer
 import com.example.travelplanner.BuildConfig
 import com.example.travelplanner.data.PlaceDetails
 import com.example.travelplanner.R
 import com.example.travelplanner.activities.PlacesActivity
+import com.example.travelplanner.data.SharedData
 
 import com.google.android.gms.common.api.Status
 import com.google.android.gms.maps.*
@@ -38,11 +42,11 @@ import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 
 
-class PlacesMapFragment : Fragment(), OnMapReadyCallback,
+class PlacesMapFragment() : Fragment(), OnMapReadyCallback,
     ActivityCompat.OnRequestPermissionsResultCallback {
 
     //google maps api
-    private lateinit var googleMap:GoogleMap
+    private lateinit var map:GoogleMap
     private lateinit var mapView: MapView
 
     //firebase
@@ -51,6 +55,7 @@ class PlacesMapFragment : Fragment(), OnMapReadyCallback,
     private lateinit var tripsReference: DocumentReference
 
     private lateinit var placesActivity: PlacesActivity
+    private lateinit var placesListFragment: PlacesListFragment
     private var tripLatitude: Double = 0.0
     private var tripLongitude: Double = 0.0
 
@@ -60,6 +65,9 @@ class PlacesMapFragment : Fragment(), OnMapReadyCallback,
     private lateinit var placeTypesArray: ArrayList<String>
     private lateinit var placeAddress: String
     private lateinit var placeOpeningHours: OpeningHours
+    private var placeRating: Double = 0.0
+    private var placeTotalRatings: Int = 0
+    private var placeUtcOffset: Int = 0
     private lateinit var placeDetailsArray: ArrayList<PlaceDetails>
 
     //view components
@@ -67,18 +75,17 @@ class PlacesMapFragment : Fragment(), OnMapReadyCallback,
     private lateinit var cancelBtn: Button
     private lateinit var placeInfoLayout: CardView
     private lateinit var clearPlaceBtn: Button
+    private lateinit var placeNameCard: TextView
+    private lateinit var placeAddressCard: TextView
 
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
-        mapView = view?.findViewById(R.id.map_view)!!
-        mapView.onCreate(savedInstanceState)
-        mapView.onResume()
 
-        mapView.getMapAsync(this)
 
         //retrieve data from Activity
         placesActivity = activity as PlacesActivity
+        placesListFragment = PlacesListFragment()
         tripsReference = placesActivity.tripsReference
         tripLatitude = placesActivity.tripLatitude
         tripLongitude = placesActivity.tripLongitude
@@ -88,20 +95,136 @@ class PlacesMapFragment : Fragment(), OnMapReadyCallback,
 
         placeDetailsArray = placesActivity.placeDetailsArray
 
-        //init buttons
-        addBtn = requireView().findViewById(R.id.addBtn)
-        cancelBtn = requireView().findViewById(R.id.cancelBtn)
-        addBtn.visibility = View.INVISIBLE
-        cancelBtn.visibility = View.INVISIBLE
 
-        //placeInfoCard
-        placeInfoLayout = requireView().findViewById(R.id.place_details_card)
-        placeInfoLayout.visibility = View.INVISIBLE
-        clearPlaceBtn = requireView().findViewById(R.id.cardbtn_clear)
 
         initPlacesAutocomplete()
 
     }//end onActivityCreated()
+
+    override fun onCreateView(
+        inflater: LayoutInflater, container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
+        // Inflate the layout for this fragment
+
+        return inflater.inflate(R.layout.fragment_places_map, container, false)
+    }//end onCreateView()
+
+
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        mapView = view.findViewById(R.id.map_view)
+        mapView.onCreate(savedInstanceState)
+
+        mapView.getMapAsync(this)
+
+        //init buttons
+        addBtn = view.findViewById(R.id.addBtn)
+        cancelBtn = view.findViewById(R.id.cancelBtn)
+        addBtn.visibility = View.INVISIBLE
+        cancelBtn.visibility = View.INVISIBLE
+
+        //placeInfoCard
+        placeInfoLayout = view.findViewById(R.id.place_details_card)
+        placeInfoLayout.visibility = View.INVISIBLE
+        clearPlaceBtn = view.findViewById(R.id.cardbtn_clear)
+        placeNameCard= view.findViewById(R.id.card_place_name)
+        placeAddressCard= view.findViewById(R.id.card_place_address)
+
+
+    }//end onViewCreated()
+
+    override fun onStart() {
+        super.onStart()
+        Log.d(ContentValues.TAG, "Map Fragment, onStart() called");
+        mapView?.onStart()
+    }
+
+    override fun onStop() {
+        super.onStop()
+        Log.d(ContentValues.TAG, "Map Fragment, onStop() called");
+        mapView?.onStop()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        Log.d(ContentValues.TAG, "Map Fragment, onResume() called");
+        mapView?.onResume()
+
+    }//end onResume()
+
+    override fun onLowMemory() {
+        super.onLowMemory()
+        Log.d(ContentValues.TAG, "Map Fragment, onLowMemory() called");
+        mapView?.onLowMemory()
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        Log.d(ContentValues.TAG, "Map Fragment, onSavedInstanceState() called");
+        mapView?.onSaveInstanceState(outState)
+    }
+
+
+    override fun onPause() {
+        super.onPause()
+        Log.d(ContentValues.TAG, "Map Fragment, onPause() called");
+        mapView?.onPause()
+
+        placeInfoLayout.visibility = View.INVISIBLE
+    }//end onPause()
+
+
+    override fun onMapReady(googleMap: GoogleMap) {
+        Log.d(ContentValues.TAG, "Map Fragment, onMapReady() called");
+        map = googleMap
+
+        //set camera to trip location
+        val tripLocation = LatLng(tripLatitude, tripLongitude)
+
+        map.moveCamera(CameraUpdateFactory.newLatLngZoom(tripLocation, 12f))
+
+        displayPlaceMarkers()
+
+        map.setOnMarkerClickListener{marker ->
+            val markerLocation: LatLng = LatLng(marker.position.latitude, marker.position.longitude)
+            val location: CameraUpdate = CameraUpdateFactory.newLatLngZoom(markerLocation, 16f)
+            map.animateCamera(location)
+            val placeName: TextView = requireView().findViewById(R.id.card_place_name)
+            val placeAddress: TextView = requireView().findViewById(R.id.card_place_address)
+
+
+            for(place in placeDetailsArray){
+                if(place.name == marker.title){
+                    placeName.text = place.name.toString()
+                    placeAddress.text = place.address.toString()
+                }
+            }
+            placeInfoLayout.visibility = View.VISIBLE
+
+            true
+        }
+
+        clearPlaceBtn.setOnClickListener{
+            placeInfoLayout.visibility = View.INVISIBLE
+        }
+
+    }//end onMapReady()
+
+
+    private fun displayPlaceMarkers() {
+        Log.d(ContentValues.TAG, "Map Fragment: ${placeDetailsArray}");
+
+        for(place in placeDetailsArray){
+            val placeLocation = LatLng(place.coordinates.latitude, place.coordinates.longitude)
+            map.addMarker(
+                MarkerOptions()
+                    .position(placeLocation)
+                    .title(place.name)
+            )
+        }
+    }//end displayMarkers()
 
 
     private fun initPlacesAutocomplete() {
@@ -116,10 +239,10 @@ class PlacesMapFragment : Fragment(), OnMapReadyCallback,
 
         autoCompleteFragment.setLocationBias(
             RectangularBounds.newInstance(
-            LatLng(tripLatitude,tripLongitude),
-            LatLng(tripLatitude,tripLongitude)
+                LatLng(tripLatitude,tripLongitude),
+                LatLng(tripLatitude,tripLongitude)
 
-        ))
+            ))
 
         //specifies the information the application will receive from the API
         autoCompleteFragment.setPlaceFields(listOf(
@@ -130,7 +253,8 @@ class PlacesMapFragment : Fragment(), OnMapReadyCallback,
             Place.Field.ADDRESS,
             Place.Field.OPENING_HOURS,
             Place.Field.RATING,
-            Place.Field.WEBSITE_URI,
+            Place.Field.USER_RATINGS_TOTAL,
+            Place.Field.PHOTO_METADATAS,
             Place.Field.UTC_OFFSET)
         )
 
@@ -151,8 +275,12 @@ class PlacesMapFragment : Fragment(), OnMapReadyCallback,
                 }
                 placeAddress = place.address
                 placeOpeningHours = place.openingHours
+                placeRating = place.rating
+                placeTotalRatings = place.userRatingsTotal
+                placeUtcOffset = place.utcOffsetMinutes
 
                 Log.i("Place Opening Hours", "${placeOpeningHours.periods}")
+
 
                 val placeOpeningHoursArray = ArrayList<Any>()
                 for (period in placeOpeningHours.periods){
@@ -175,14 +303,14 @@ class PlacesMapFragment : Fragment(), OnMapReadyCallback,
                 //set marker and animate camera
                 val placeLocation = LatLng(placeCoordinates.latitude, placeCoordinates.longitude)
                 var newPlaceMarker: Marker? = null
-                newPlaceMarker = googleMap.addMarker(
+                newPlaceMarker = map.addMarker(
                     MarkerOptions()
                         .position(placeLocation)
                         .title(placeName)
                 )
                 val placeLatLng: LatLng = LatLng(placeCoordinates.latitude, placeCoordinates.longitude)
                 val location: CameraUpdate = CameraUpdateFactory.newLatLngZoom(placeLatLng, 16f)
-                googleMap.animateCamera(location)
+                map.animateCamera(location)
 
                 addBtn.visibility = View.VISIBLE
                 cancelBtn.visibility = View.VISIBLE
@@ -223,71 +351,9 @@ class PlacesMapFragment : Fragment(), OnMapReadyCallback,
                 Log.i(ContentValues.TAG, "Could not find place: $status")
 
             }
+
         })
     }//end initAutocompletePlaces()
-
-
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
-        // Inflate the layout for this fragment
-
-        return inflater.inflate(R.layout.fragment_places_map, container, false)
-    }//end onCreateView()
-
-
-    override fun onMapReady(map: GoogleMap) {
-        //this works so don't touch it
-        map?.let {
-            googleMap = it
-
-            //set camera to trip location
-            val tripLocation = LatLng(tripLatitude, tripLongitude)
-            map.moveCamera(CameraUpdateFactory.newLatLngZoom(tripLocation, 12f))
-
-            displayPlaceMarkers()
-
-            map.setOnMarkerClickListener{marker ->
-                val markerLocation: LatLng = LatLng(marker.position.latitude, marker.position.longitude)
-                val location: CameraUpdate = CameraUpdateFactory.newLatLngZoom(markerLocation, 16f)
-                map.animateCamera(location)
-
-                val placeName: TextView = requireView().findViewById(R.id.card_place_name)
-                val placeAddress: TextView = requireView().findViewById(R.id.card_place_address)
-
-
-                for(place in placeDetailsArray){
-                    if(place.name == marker.title){
-                        placeName.text = place.name.toString()
-                        placeAddress.text = place.address.toString()
-                    }
-                }
-                placeInfoLayout.visibility = View.VISIBLE
-
-                true
-            }
-
-            clearPlaceBtn.setOnClickListener{
-                placeInfoLayout.visibility = View.INVISIBLE
-            }
-
-        }
-    }//end onMapReady()
-
-
-    private fun displayPlaceMarkers() {
-        Log.d(ContentValues.TAG, "Map Fragment: ${placeDetailsArray}");
-
-        for(place in placeDetailsArray){
-            val placeLocation = LatLng(place.coordinates.latitude, place.coordinates.longitude)
-            googleMap.addMarker(
-                MarkerOptions()
-                    .position(placeLocation)
-                    .title(place.name)
-            )
-        }
-    }//end displayMarkers()
 
 
 }//end class
