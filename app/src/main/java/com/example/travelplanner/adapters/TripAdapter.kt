@@ -33,9 +33,11 @@ class TripAdapter(private val tripsList : ArrayList<TripDetails>) : RecyclerView
         val currentTrip = tripsList[position]
         holder.tripTitle.text = currentTrip.name
 
+        Log.d(TAG, "onBindViewHolder: startDate seconds: " + currentTrip.startDate.seconds);
         val currentStartDate = getDateString(currentTrip.startDate.seconds)
         holder.startDate.text = currentStartDate
 
+        Log.d(TAG, "onBindViewHolder: endDate seconds: " + currentTrip.endDate.seconds);
         val currentEndDate = getDateString(currentTrip.endDate.seconds)
         holder.endDate.text = currentEndDate
 

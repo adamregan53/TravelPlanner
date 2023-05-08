@@ -9,6 +9,7 @@ import com.example.travelplanner.data.SharedData
 import com.example.travelplanner.data.TripDetails
 import com.example.travelplanner.databinding.ActivityTripsBinding
 import com.example.travelplanner.fragments.TestExpandingList
+import com.example.travelplanner.fragments.PlacesItineraryFragment
 import com.example.travelplanner.fragments.TripsListFragment
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
@@ -32,6 +33,7 @@ class TripsActivity : DrawerBaseActivity(){//end class
     private lateinit var tripCoordinates: GeoPoint
     private lateinit var startDate: Timestamp
     private lateinit var endDate: Timestamp
+    private var isItineraryGenerated: Boolean = false
     lateinit var tripsList: ArrayList<TripDetails>
 
     //layout
@@ -40,6 +42,7 @@ class TripsActivity : DrawerBaseActivity(){//end class
 
     //init fragments
     private lateinit var tripsListFragment: TripsListFragment
+    private lateinit var tripsItineraryFragment: PlacesItineraryFragment
 
 
 
@@ -76,11 +79,12 @@ class TripsActivity : DrawerBaseActivity(){//end class
                     for(document in result){
                         Log.d(TAG, "${document.id} => ${document.data["trip_name"]}")
                         tripId = document.id
-                        tripName = document.data["trip_name"].toString()
+                        tripName = document.data["tripName"].toString()
                         tripCoordinates = document.data["coordinates"] as GeoPoint
                         startDate = document.data["startDate"] as Timestamp
                         endDate = document.data["endDate"] as Timestamp
-                        val tripDetail = TripDetails(tripId, tripName, tripCoordinates, startDate, endDate)
+                        isItineraryGenerated = document.data["isItineraryGenerated"]  as Boolean
+                        val tripDetail = TripDetails(tripId, tripName, tripCoordinates, startDate, endDate, isItineraryGenerated)
                         tripsList.add(tripDetail)
                     }
 
@@ -101,6 +105,7 @@ class TripsActivity : DrawerBaseActivity(){//end class
                 tripCoordinates = trip.coordinates
                 startDate = trip.startDate
                 endDate = trip.endDate
+                isItineraryGenerated = trip.isItineraryGenerated
             }
             Log.w(TAG, "Retrieved trips from Singleton")
 
@@ -114,6 +119,7 @@ class TripsActivity : DrawerBaseActivity(){//end class
 
     private fun initFragments() {
         tripsListFragment = TripsListFragment()
+        tripsItineraryFragment = PlacesItineraryFragment()
         val testExpandingList: TestExpandingList = TestExpandingList()
 
         supportFragmentManager.beginTransaction().apply {

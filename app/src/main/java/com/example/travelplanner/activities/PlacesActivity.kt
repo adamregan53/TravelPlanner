@@ -8,13 +8,13 @@ import com.example.travelplanner.data.PlaceDetails
 import com.example.travelplanner.R
 import com.example.travelplanner.adapters.ViewPagerAdapter
 import com.example.travelplanner.databinding.ActivityPlacesBinding
-import com.google.android.libraries.places.api.model.OpeningHours
 import com.google.android.material.tabs.TabLayout
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.GeoPoint
+import com.google.firebase.firestore.QueryDocumentSnapshot
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 
@@ -34,12 +34,7 @@ class PlacesActivity : DrawerBaseActivity() {//end class
     var tripLongitude: Double = 0.0
 
     //init place variables
-    private lateinit var placeName: String
-    private lateinit var placeId: String
-    private lateinit var placeCoordinates: GeoPoint
-    private lateinit var placeTypesArray: ArrayList<String>
-    private lateinit var placeAddress: String
-    private lateinit var placeOpeningHours: OpeningHours
+
     private lateinit var placeDetail: PlaceDetails
     lateinit var placeDetailsArray: ArrayList<PlaceDetails>
 
@@ -76,31 +71,91 @@ class PlacesActivity : DrawerBaseActivity() {//end class
     private fun retrievePlaces() {
         tripsReference.collection("places").get()
             .addOnSuccessListener { result ->
+                var placeName: String
+                var placeId: String
+                var placeCoordinates: GeoPoint
+                var placeTypesArray: ArrayList<String>
+                var placeAddress: String
+                var placeOpeningHoursArray: ArrayList<Any>
+                var placeOpeningHoursText: ArrayList<String>
+                var placeRating: Double?
+                var placeRatingTotal: Int?
+
                 for (document in result) {
                     placeName = document.data["name"].toString()
                     placeId = document.id
-                    placeAddress = document.data["address"].toString()
+                    placeCoordinates = document.data["coordinates"] as GeoPoint
                     placeTypesArray = ArrayList()
                     val arrayTypes = document.data["types"] as ArrayList<*>
                     for (type in arrayTypes) {
                         placeTypesArray.add(type.toString())
                     }
-                    placeCoordinates = document.data["coordinates"] as GeoPoint
+                    placeAddress = document.data["address"].toString()
+
+                    placeOpeningHoursArray = ArrayList()
+                    if(isDocumentNull(document, "openingHours")){
+                        val placeOpeningHours = document.data["openingHours"] as ArrayList<Any>
+                        for (openingHours in placeOpeningHours) {
+                            val map = openingHours as HashMap<*, *>
+                            placeOpeningHoursArray.add(map)
+                        }
+                    }
+
+                    placeOpeningHoursText = ArrayList()
+                    if(isDocumentNull(document, "openingHoursText")){
+                        val openingHoursTextArray = document.data["openingHoursText"] as ArrayList<String>
+                        for (openingHoursText in openingHoursTextArray){
+                            placeOpeningHoursText.add(openingHoursText)
+                        }
+                    }
+
+                    placeRating = null
+                    if(isDocumentNull(document, "rating")){
+                        placeRating = document.data["rating"] as Double
+                    }
+
+                    placeRatingTotal = null
+                    if(isDocumentNull(document, "totalRatings")){
+                        val ratingsTotalLong = document.data["totalRatings"] as Long
+                        placeRatingTotal = ratingsTotalLong.toInt()
+                    }
+
                     placeDetail = PlaceDetails(
                         placeName,
                         placeId,
                         placeCoordinates,
                         placeTypesArray,
-                        placeAddress
+                        placeAddress,
+                        placeOpeningHoursArray,
+                        placeOpeningHoursText,
+                        placeRating,
+                        placeRatingTotal
                     )
 
                     placeDetailsArray.add(placeDetail)
 
                 }
+
+                for(place in placeDetailsArray){
+                    for (openingHours in place.openingHours!!){
+                        val map = openingHours as HashMap<*, *>
+                        Log.d(ContentValues.TAG, "PlacesActivity, openingHours: ${map}");
+                    }
+
+
+                    Log.d(ContentValues.TAG, "PlacesActivity, placeDetails: $place");
+
+                }
+
                 initFragments()
             }
 
     }//end retrievePlaces()
+
+    private fun isDocumentNull(docRef:QueryDocumentSnapshot, field:String): Boolean{
+        return docRef.data[field] != null
+
+    }
 
 
     //initialises the tabs for places list and map

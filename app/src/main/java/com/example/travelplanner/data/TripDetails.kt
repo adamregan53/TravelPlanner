@@ -8,5 +8,6 @@ data class TripDetails(
     var name: String,
     var coordinates: GeoPoint,
     var startDate: Timestamp,
-    var endDate: Timestamp
+    var endDate: Timestamp,
+    var isItineraryGenerated: Boolean
 )

@@ -2,24 +2,23 @@ package com.example.travelplanner.fragments
 
 import android.content.ContentValues
 import android.os.Bundle
+import android.transition.AutoTransition
+import android.transition.TransitionManager
 import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
+import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.cardview.widget.CardView
 import androidx.core.app.ActivityCompat
-import androidx.core.view.get
-import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.Observer
 import com.example.travelplanner.BuildConfig
 import com.example.travelplanner.data.PlaceDetails
 import com.example.travelplanner.R
 import com.example.travelplanner.activities.PlacesActivity
-import com.example.travelplanner.data.SharedData
 
 import com.google.android.gms.common.api.Status
 import com.google.android.gms.maps.*
@@ -59,29 +58,33 @@ class PlacesMapFragment() : Fragment(), OnMapReadyCallback,
     private var tripLatitude: Double = 0.0
     private var tripLongitude: Double = 0.0
 
-    private lateinit var placeName: String
-    private lateinit var placeId: String
-    private lateinit var placeCoordinates: GeoPoint
-    private lateinit var placeTypesArray: ArrayList<String>
-    private lateinit var placeAddress: String
-    private lateinit var placeOpeningHours: OpeningHours
-    private var placeRating: Double = 0.0
-    private var placeTotalRatings: Int = 0
-    private var placeUtcOffset: Int = 0
     private lateinit var placeDetailsArray: ArrayList<PlaceDetails>
 
     //view components
-    private lateinit var addBtn: Button
-    private lateinit var cancelBtn: Button
-    private lateinit var placeInfoLayout: CardView
-    private lateinit var clearPlaceBtn: Button
-    private lateinit var placeNameCard: TextView
-    private lateinit var placeAddressCard: TextView
+    private lateinit var addBtn: Button//add place button from places autocomplete
+    private lateinit var cancelBtn: Button//cancel add place operation
+
+    //place info card
+    private lateinit var placeInfoLayout: CardView //main info layout
+    private lateinit var expandableDetailsLayout: LinearLayout //expandable info layout
+    private lateinit var expandablePlaceCardBtn: Button //expand layout button
+    private lateinit var placeInfoName: TextView //display place name on info card
+    private lateinit var closeDetailsBtn: View //close info card
+    private lateinit var placeInfoTypes: TextView //display place types on info card
+    private lateinit var placeInfoAddress: TextView //display place address on info card
+    private lateinit var placeOpeningHoursMonday: TextView
+    private lateinit var placeOpeningHoursTuesday: TextView
+    private lateinit var placeOpeningHoursWednesday: TextView
+    private lateinit var placeOpeningHoursThursday: TextView
+    private lateinit var placeOpeningHoursFriday: TextView
+    private lateinit var placeOpeningHoursSaturday: TextView
+    private lateinit var placeOpeningHoursSunday: TextView
+    private lateinit var placeInfoRating: TextView
+    private lateinit var placeInfoTotalRating: TextView
 
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
-
 
         //retrieve data from Activity
         placesActivity = activity as PlacesActivity
@@ -94,8 +97,6 @@ class PlacesMapFragment() : Fragment(), OnMapReadyCallback,
         fStore = Firebase.firestore
 
         placeDetailsArray = placesActivity.placeDetailsArray
-
-
 
         initPlacesAutocomplete()
 
@@ -114,38 +115,75 @@ class PlacesMapFragment() : Fragment(), OnMapReadyCallback,
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        //google maps
         mapView = view.findViewById(R.id.map_view)
         mapView.onCreate(savedInstanceState)
-
         mapView.getMapAsync(this)
 
-        //init buttons
+        //init places autocomplete buttons
         addBtn = view.findViewById(R.id.addBtn)
         cancelBtn = view.findViewById(R.id.cancelBtn)
         addBtn.visibility = View.INVISIBLE
         cancelBtn.visibility = View.INVISIBLE
 
         //placeInfoCard
-        placeInfoLayout = view.findViewById(R.id.place_details_card)
-        placeInfoLayout.visibility = View.INVISIBLE
-        clearPlaceBtn = view.findViewById(R.id.cardbtn_clear)
-        placeNameCard= view.findViewById(R.id.card_place_name)
-        placeAddressCard= view.findViewById(R.id.card_place_address)
-
+        placeInfoLayout = view.findViewById(R.id.place_info_card)
+        placeInfoLayout.visibility = View.GONE
+        expandableDetailsLayout = view.findViewById(R.id.expandable_details_layout)
+        expandablePlaceCardBtn = view.findViewById(R.id.expand_place_card_btn)
+        expandablePlaceCardBtn.setOnClickListener{
+            if(expandableDetailsLayout.visibility == View.GONE){
+                expandInfoCard()
+            }else{
+                collapseInfoCard()
+            }
+        }
+        placeInfoName = view.findViewById(R.id.place_name)
+        closeDetailsBtn = view.findViewById(R.id.close_details_btn)
+        closeDetailsBtn.setOnClickListener{
+            closeInfoCard()
+        }
+        placeInfoTypes = view.findViewById(R.id.place_types)
+        placeInfoAddress = view.findViewById(R.id.place_address)
+        placeOpeningHoursMonday = view.findViewById(R.id.place_opening_hours_monday_txt)
+        placeOpeningHoursTuesday = view.findViewById(R.id.place_opening_hours_tuesday_txt)
+        placeOpeningHoursWednesday = view.findViewById(R.id.place_opening_hours_wednesday_txt)
+        placeOpeningHoursThursday = view.findViewById(R.id.place_opening_hours_thursday_txt)
+        placeOpeningHoursFriday = view.findViewById(R.id.place_opening_hours_friday_txt)
+        placeOpeningHoursSaturday = view.findViewById(R.id.place_opening_hours_saturday_txt)
+        placeOpeningHoursSunday = view.findViewById(R.id.place_opening_hours_sunday_txt)
+        placeInfoRating = view.findViewById(R.id.place_rating)
+        placeInfoTotalRating = view.findViewById(R.id.place_total_rating)
 
     }//end onViewCreated()
+
+    private fun collapseInfoCard() {
+        TransitionManager.beginDelayedTransition(placeInfoLayout, AutoTransition())
+        expandableDetailsLayout.visibility = View.GONE
+    }//end closeInfoCard()
+
+    private fun expandInfoCard() {
+        TransitionManager.beginDelayedTransition(placeInfoLayout, AutoTransition())
+        expandableDetailsLayout.visibility = View.VISIBLE
+    }//end openInfoCard()
+
+    private fun closeInfoCard(){
+        TransitionManager.beginDelayedTransition(placeInfoLayout, AutoTransition())
+        placeInfoLayout.visibility = View.GONE
+    }
+
 
     override fun onStart() {
         super.onStart()
         Log.d(ContentValues.TAG, "Map Fragment, onStart() called");
         mapView?.onStart()
-    }
+    }//end onStart()
 
     override fun onStop() {
         super.onStop()
         Log.d(ContentValues.TAG, "Map Fragment, onStop() called");
         mapView?.onStop()
-    }
+    }//end onStop()
 
     override fun onResume() {
         super.onResume()
@@ -191,24 +229,45 @@ class PlacesMapFragment() : Fragment(), OnMapReadyCallback,
             val markerLocation: LatLng = LatLng(marker.position.latitude, marker.position.longitude)
             val location: CameraUpdate = CameraUpdateFactory.newLatLngZoom(markerLocation, 16f)
             map.animateCamera(location)
-            val placeName: TextView = requireView().findViewById(R.id.card_place_name)
-            val placeAddress: TextView = requireView().findViewById(R.id.card_place_address)
 
+            placeOpeningHoursMonday.text = ""
+            placeOpeningHoursTuesday.text = ""
+            placeOpeningHoursWednesday.text = ""
+            placeOpeningHoursThursday.text = ""
+            placeOpeningHoursFriday.text = ""
+            placeOpeningHoursSaturday.text = ""
+            placeOpeningHoursSunday.text = ""
+            placeInfoRating.text = ""
+            placeInfoTotalRating.text = ""
 
             for(place in placeDetailsArray){
                 if(place.name == marker.title){
-                    placeName.text = place.name.toString()
-                    placeAddress.text = place.address.toString()
+                    placeInfoName.text = place.name.toString()
+                    placeInfoTypes.text = place.types.toString()
+                    placeInfoAddress.text = place.address
+                    if(place.openingHoursText!!.isNotEmpty()) {
+                        placeOpeningHoursMonday.text = place.openingHoursText[0]
+                        placeOpeningHoursTuesday.text = place.openingHoursText[1]
+                        placeOpeningHoursWednesday.text = place.openingHoursText[2]
+                        placeOpeningHoursThursday.text = place.openingHoursText[3]
+                        placeOpeningHoursFriday.text = place.openingHoursText[4]
+                        placeOpeningHoursSaturday.text = place.openingHoursText[5]
+                        placeOpeningHoursSunday.text = place.openingHoursText[6]
+                    }
+                    if(place.rating != null){
+                        placeInfoRating.text = place.rating.toString()
+                    }
+                    if(place.totalRatings != null) {
+                        placeInfoTotalRating.text = "(${place.totalRatings.toString()})"
+                    }
                 }
             }
+            TransitionManager.beginDelayedTransition(placeInfoLayout, AutoTransition())
             placeInfoLayout.visibility = View.VISIBLE
 
             true
         }
 
-        clearPlaceBtn.setOnClickListener{
-            placeInfoLayout.visibility = View.INVISIBLE
-        }
 
     }//end onMapReady()
 
@@ -251,12 +310,23 @@ class PlacesMapFragment() : Fragment(), OnMapReadyCallback,
             Place.Field.LAT_LNG,
             Place.Field.TYPES,
             Place.Field.ADDRESS,
+            Place.Field.ADDRESS_COMPONENTS,
             Place.Field.OPENING_HOURS,
             Place.Field.RATING,
-            Place.Field.USER_RATINGS_TOTAL,
-            Place.Field.PHOTO_METADATAS,
-            Place.Field.UTC_OFFSET)
+            Place.Field.USER_RATINGS_TOTAL)
         )
+
+        var placeName: String
+        var placeId: String
+        var placeCoordinates: GeoPoint
+        var placeTypesArray: ArrayList<String>
+        var placeAddress: String
+        var placeOpeningHoursArray: ArrayList<Any>
+        var placeOpeningHoursTextArray: ArrayList<String>
+        var placeRating: Double?
+        var placeTotalRatings: Int?
+
+        var placeDetailsMap = hashMapOf<Any, Any>()
 
         autoCompleteFragment.setOnPlaceSelectedListener(object : PlaceSelectionListener {
 
@@ -264,41 +334,69 @@ class PlacesMapFragment() : Fragment(), OnMapReadyCallback,
                 Log.i("Places", "Place: ${place.name}, ${place.id}, ${place.latLng}, ${place.types}, ${place.address}, ${place.openingHours}")
                 Log.i("Places", "Json: $place")
 
+                //set info layout to visible
                 placeInfoLayout.visibility = View.INVISIBLE
 
-                placeName = place.name
-                placeId = place.id
+                //build place details map
+                placeName = place.name.toString()
+                placeDetailsMap["name"] = placeName
+
+                placeId = place.id.toString()
+                placeDetailsMap["id"] = placeId
+
                 placeCoordinates = GeoPoint(place.latLng.latitude, place.latLng.longitude)
+                placeDetailsMap["coordinates"] = placeCoordinates
+
                 placeTypesArray= ArrayList()
                 for(type in place.types){
                     placeTypesArray.add(type.toString())
                 }
-                placeAddress = place.address
-                placeOpeningHours = place.openingHours
+                placeDetailsMap["types"] = placeTypesArray
+
+                placeAddress = place.address.toString()
+                placeDetailsMap["address"] = placeAddress
+
+                val placeOpeningHours: OpeningHours? = place.openingHours
+                placeOpeningHoursArray = ArrayList<Any>()
+                if (placeOpeningHours != null) {
+                    for(period in placeOpeningHours.periods){
+                        val openingHours = hashMapOf(
+                            "openDay" to period.open.day.name,
+                            "closeDay" to period.close.day.name,
+                            "openHours" to period.open.time.hours,
+                            "openMinutes" to period.open.time.minutes,
+                            "closeHours" to period.close.time.hours,
+                            "closeMinutes" to period.close.time.minutes
+                        )
+                        placeOpeningHoursArray.add(openingHours)
+                    }
+                    placeDetailsMap["openingHours"] = placeOpeningHoursArray
+                }
+
+                val placeOpeningHoursText: OpeningHours? = place.openingHours
+                placeOpeningHoursTextArray = ArrayList()
+                if (placeOpeningHoursText != null) {
+                    for (text in placeOpeningHoursText.weekdayText) {
+                        placeOpeningHoursTextArray.add(text.toString())
+                    }
+                    placeDetailsMap["openingHoursText"] = placeOpeningHoursTextArray
+                }
+
                 placeRating = place.rating
+                if(placeRating != null) {
+                    placeDetailsMap["rating"] = placeRating as Double
+                }
+
                 placeTotalRatings = place.userRatingsTotal
-                placeUtcOffset = place.utcOffsetMinutes
-
-                Log.i("Place Opening Hours", "${placeOpeningHours.periods}")
-
-
-                val placeOpeningHoursArray = ArrayList<Any>()
-                for (period in placeOpeningHours.periods){
-                    val openingHours = hashMapOf(
-                        "dayOpen" to period.open.day.name,
-                        "dayClose" to period.close.day.name,
-                        "close" to period.close.time,
-                        "open" to period.open.time
-                    )
-                    placeOpeningHoursArray.add(openingHours)
-
+                if(placeTotalRatings != null) {
+                    placeDetailsMap["totalRatings"] = placeTotalRatings as Int
                 }
 
-                for (openingHours in placeOpeningHoursArray){
-                    Log.i("Place Opening Hours", "${openingHours}")
-                }
 
-                val placeDetail = PlaceDetails(placeName, placeId, placeCoordinates, placeTypesArray, placeAddress)
+                val placeDetail = PlaceDetails(placeName, placeId, placeCoordinates, placeTypesArray, placeAddress, placeOpeningHoursArray, placeOpeningHoursTextArray, placeRating, placeTotalRatings)
+                Log.i(ContentValues.TAG, "Place Detail: $placeDetail")
+
+                Log.i(ContentValues.TAG, "Place Detail Map: $placeDetailsMap")
 
                 //set marker and animate camera
                 val placeLocation = LatLng(placeCoordinates.latitude, placeCoordinates.longitude)
@@ -316,7 +414,7 @@ class PlacesMapFragment() : Fragment(), OnMapReadyCallback,
                 cancelBtn.visibility = View.VISIBLE
 
                 addBtn.setOnClickListener{
-                    tripsReference.collection("places").add(placeDetail)
+                    tripsReference.collection("places").add(placeDetailsMap)
                         .addOnSuccessListener{
                             Log.d(ContentValues.TAG, "Place Added Successfully")
                             Toast.makeText(context, "Place Added Successfully", Toast.LENGTH_SHORT).show()
@@ -330,7 +428,7 @@ class PlacesMapFragment() : Fragment(), OnMapReadyCallback,
                             addBtn.visibility = View.INVISIBLE
                             cancelBtn.visibility = View.INVISIBLE
                         }
-                    fStore.collection("places").add(placeDetail)
+                    fStore.collection("places").add(placeDetailsMap)
                         .addOnSuccessListener {
                             Log.d(ContentValues.TAG, "Place Added To Full Places List")
                         }
@@ -354,6 +452,7 @@ class PlacesMapFragment() : Fragment(), OnMapReadyCallback,
 
         })
     }//end initAutocompletePlaces()
+
 
 
 }//end class
