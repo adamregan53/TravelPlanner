@@ -3,6 +3,7 @@ package com.example.travelplanner.activities
 import android.content.ContentValues
 import android.os.Bundle
 import android.util.Log
+import android.widget.Toast
 import androidx.viewpager2.widget.ViewPager2
 import com.example.travelplanner.data.PlaceDetails
 import com.example.travelplanner.R
@@ -18,7 +19,7 @@ import com.google.firebase.firestore.QueryDocumentSnapshot
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 
-class PlacesActivity : DrawerBaseActivity() {//end class
+class PlacesActivity : DrawerBaseActivity() {
 
     private lateinit var binding: ActivityPlacesBinding
 
@@ -27,9 +28,11 @@ class PlacesActivity : DrawerBaseActivity() {//end class
     private lateinit var auth: FirebaseAuth
     private lateinit var currentUserId: String
     lateinit var tripsReference: DocumentReference private set
+    lateinit var locationsReference: DocumentReference private set
 
     //Values From TripsActivity
     private lateinit var tripId: String
+    private lateinit var tripLocationRef: String
     var tripLatitude: Double = 0.0
     var tripLongitude: Double = 0.0
 
@@ -47,8 +50,11 @@ class PlacesActivity : DrawerBaseActivity() {//end class
         binding = ActivityPlacesBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+
+        
         //received from TripsActivity
         tripId = intent.getStringExtra("tripId") as String
+        tripLocationRef = intent.getStringExtra("tripLocationRef") as String
         tripLatitude = intent.getDoubleExtra("tripLatitude", 0.0)
         tripLongitude = intent.getDoubleExtra("tripLongitude", 0.0)
 
@@ -60,6 +66,9 @@ class PlacesActivity : DrawerBaseActivity() {//end class
             .document(currentUserId)
             .collection("trips")
             .document(tripId)
+
+        locationsReference = fStore.collection("locations")
+            .document(tripLocationRef)
 
         placeDetailsArray = arrayListOf()
 
@@ -148,14 +157,19 @@ class PlacesActivity : DrawerBaseActivity() {//end class
                 }
 
                 initFragments()
-            }
+            }//end addOnSuccessListener()
+            .addOnFailureListener{
+                Toast.makeText(this, "Could not retrieve data from Firebase", Toast.LENGTH_SHORT).show()
+
+            }//end addOnFailureListener()
+
 
     }//end retrievePlaces()
 
     private fun isDocumentNull(docRef:QueryDocumentSnapshot, field:String): Boolean{
         return docRef.data[field] != null
 
-    }
+    }//end isDocumentNull()
 
 
     //initialises the tabs for places list and map
@@ -194,4 +208,4 @@ class PlacesActivity : DrawerBaseActivity() {//end class
     }//end initFragments()
 
 
-}
+}//end class

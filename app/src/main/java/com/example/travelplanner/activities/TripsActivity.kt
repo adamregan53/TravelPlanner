@@ -28,22 +28,22 @@ class TripsActivity : DrawerBaseActivity(){//end class
     private lateinit var currentUserId: String
 
     //trip data
-    private lateinit var tripId: String
-    private lateinit var tripName: String
-    private lateinit var tripCoordinates: GeoPoint
-    private lateinit var startDate: Timestamp
-    private lateinit var endDate: Timestamp
-    private var isItineraryGenerated: Boolean = false
-    lateinit var tripsList: ArrayList<TripDetails>
+    lateinit var newTripId: String
+    lateinit var newTripName: String
+    lateinit var newTripCoordinates: GeoPoint
+    lateinit var newStartDate: Timestamp
+    lateinit var newEndDate: Timestamp
+    lateinit var newLocationId: String
+    lateinit var newLocationRef: String
+    var newUtcOffset: Int = 0
+    var isNewItineraryGenerated: Boolean = false
 
     //layout
-
     private lateinit var activityTripsBinding: ActivityTripsBinding
 
     //init fragments
     private lateinit var tripsListFragment: TripsListFragment
     private lateinit var tripsItineraryFragment: PlacesItineraryFragment
-
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -56,9 +56,6 @@ class TripsActivity : DrawerBaseActivity(){//end class
         fStore = Firebase.firestore
         currentUserId = auth.currentUser?.uid.toString()
 
-
-        //tripsList = arrayListOf<TripDetails>()
-        tripsList = SharedData.tripsList
 
 
         retrieveTrips()
@@ -76,16 +73,50 @@ class TripsActivity : DrawerBaseActivity(){//end class
             userReference.collection("trips").get()
                 .addOnSuccessListener { result ->
                     //get data from documents in trips collection
+                    var tripId: String
+                    var tripAddress: String
+                    var tripCoordinates: GeoPoint
+                    var endDate: Timestamp
+                    var isItineraryGenerated: Boolean = false
+                    var locationId: String
+                    var locationRef: String
+                    var tripName: String
+                    var startDate: Timestamp
+                    var typesArray: ArrayList<String>
+                    var utcOffset: Int
+
                     for(document in result){
-                        Log.d(TAG, "${document.id} => ${document.data["trip_name"]}")
+                        Log.d(TAG, "${document.id} => ${document.data["name"]}")
                         tripId = document.id
-                        tripName = document.data["tripName"].toString()
+                        tripAddress = document.data["address"].toString()
                         tripCoordinates = document.data["coordinates"] as GeoPoint
-                        startDate = document.data["startDate"] as Timestamp
                         endDate = document.data["endDate"] as Timestamp
                         isItineraryGenerated = document.data["isItineraryGenerated"]  as Boolean
-                        val tripDetail = TripDetails(tripId, tripName, tripCoordinates, startDate, endDate, isItineraryGenerated)
-                        tripsList.add(tripDetail)
+                        locationId = document.data["locationId"].toString()
+                        locationRef = document.data["locationRef"].toString()
+                        tripName = document.data["name"].toString()
+                        startDate = document.data["startDate"] as Timestamp
+                        val types = document.data["types"] as ArrayList<*>
+                        typesArray = ArrayList()
+                        for(type in types){
+                            typesArray.add(type.toString())
+                        }
+                        val utcOffsetLong = document.data["utcOffset"] as Long
+                        utcOffset = utcOffsetLong.toInt()
+
+                        val tripDetail = TripDetails(
+                            tripId,
+                            tripAddress,
+                            tripCoordinates,
+                            endDate,
+                            isItineraryGenerated,
+                            locationId,
+                            locationRef,
+                            tripName,
+                            startDate,
+                            typesArray,
+                            utcOffset)
+                        SharedData.tripsList.add(tripDetail)
                     }
 
                     Log.w(TAG, "Retrieved trips from Firebase")
@@ -98,20 +129,9 @@ class TripsActivity : DrawerBaseActivity(){//end class
                     Toast.makeText(applicationContext, "Failure", Toast.LENGTH_LONG).show()
                 }
         }else{
-            //use singleton to display trips after retrieved from Firebase
-            for(trip in tripsList){
-                tripId = trip.id
-                tripName = trip.name
-                tripCoordinates = trip.coordinates
-                startDate = trip.startDate
-                endDate = trip.endDate
-                isItineraryGenerated = trip.isItineraryGenerated
-            }
-            Log.w(TAG, "Retrieved trips from Singleton")
-
+            Log.w(TAG, "Retrieved trips from SharedData")
             initFragments()
         }
-
 
     }//end retrieveTrips()
 
@@ -126,7 +146,6 @@ class TripsActivity : DrawerBaseActivity(){//end class
             replace(R.id.tripsFlFragment, tripsListFragment)
             commit()
         }
-
 
     }//end initFragments()
 

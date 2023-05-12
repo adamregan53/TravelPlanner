@@ -3,6 +3,7 @@ package com.example.travelplanner.adapters
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.Lifecycle
+import com.example.travelplanner.activities.PlacesActivity
 import com.example.travelplanner.fragments.PlacesItineraryFragment
 import com.example.travelplanner.fragments.PlacesListFragment
 import com.example.travelplanner.fragments.PlacesMapFragment
@@ -21,7 +22,7 @@ class ViewPagerAdapter(fragmentManager: FragmentManager, lifecycle:Lifecycle, ):
                 PlacesListFragment()
             }
             1 -> {
-                PlacesMapFragment()
+                PlacesItineraryFragment()
             }
             2 -> {
                 PlacesItineraryFragment()

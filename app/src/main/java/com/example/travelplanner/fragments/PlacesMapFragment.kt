@@ -52,6 +52,7 @@ class PlacesMapFragment() : Fragment(), OnMapReadyCallback,
     private lateinit var fStore: FirebaseFirestore
     private lateinit var auth: FirebaseAuth
     private lateinit var tripsReference: DocumentReference
+    private lateinit var locationsReference: DocumentReference
 
     private lateinit var placesActivity: PlacesActivity
     private lateinit var placesListFragment: PlacesListFragment
@@ -90,6 +91,7 @@ class PlacesMapFragment() : Fragment(), OnMapReadyCallback,
         placesActivity = activity as PlacesActivity
         placesListFragment = PlacesListFragment()
         tripsReference = placesActivity.tripsReference
+        locationsReference = placesActivity.locationsReference
         tripLatitude = placesActivity.tripLatitude
         tripLongitude = placesActivity.tripLongitude
 
@@ -204,7 +206,6 @@ class PlacesMapFragment() : Fragment(), OnMapReadyCallback,
         mapView?.onSaveInstanceState(outState)
     }
 
-
     override fun onPause() {
         super.onPause()
         Log.d(ContentValues.TAG, "Map Fragment, onPause() called");
@@ -267,7 +268,6 @@ class PlacesMapFragment() : Fragment(), OnMapReadyCallback,
 
             true
         }
-
 
     }//end onMapReady()
 
@@ -421,36 +421,94 @@ class PlacesMapFragment() : Fragment(), OnMapReadyCallback,
                             placeDetailsArray.add(placeDetail)
                             addBtn.visibility = View.INVISIBLE
                             cancelBtn.visibility = View.INVISIBLE
-                        }
+
+                            locationsReference.collection("places").add(placeDetailsMap)
+                                .addOnSuccessListener {
+                                    Log.d(ContentValues.TAG, "Place Added To Locations")
+                                }//end addOnSuccessListener()
+                                .addOnFailureListener{
+                                    Log.d(ContentValues.TAG, "Place Failed to add to Locations")
+                                }//end addOnFailureListener
+
+                            //add to locations collection
+                            /*
+                            locationsReference.collection("places").whereEqualTo("id", placeId).get()
+                                .addOnSuccessListener { result ->
+                                    //if there is no matching place
+                                    val locationsMap = placeDetailsMap
+                                    var id: String = ""
+                                    var userSearches: Int = 0
+
+                                    if(result.isEmpty){
+                                        userSearches = 1
+                                        locationsMap["userSearches"] = userSearches
+                                        locationsReference.collection("places").add(locationsMap)
+                                            .addOnSuccessListener {
+                                                Log.d(ContentValues.TAG, "Place Added To Locations")
+                                            }//end addOnSuccessListener()
+                                            .addOnFailureListener{
+                                                Log.d(ContentValues.TAG, "Place Failed to add to Locations")
+                                            }//end addOnFailureListener
+                                    }else{
+                                        for(doc in result){
+                                            if(result.size() <= 1){
+                                                id = doc.id
+                                                userSearches = doc.data["userSearches"] as Int
+                                                Log.d(ContentValues.TAG, "Location Doc ID: $id")
+
+                                            }else{
+                                                Log.d(ContentValues.TAG, "List of locations is greater than 1")
+                                            }
+                                        }
+                                        userSearches += 1
+                                        Log.d(ContentValues.TAG, "User Searches after add: $userSearches")
+                                        if(id.isNotEmpty()){
+                                            locationsReference.collection("places").document(id).update("userSearches", userSearches)
+                                                .addOnSuccessListener {
+                                                    Log.d(ContentValues.TAG, "Location userSearches Updated")
+                                                }
+                                                .addOnFailureListener{
+                                                    Log.d(ContentValues.TAG, "Location Failed to Update")
+
+                                                }
+                                        }else{
+                                            Log.d(ContentValues.TAG, "location id is empty")
+                                        }
+
+                                    }
+                                }
+                                .addOnFailureListener{
+                                    Log.d(ContentValues.TAG, "Failed to get locations")
+
+                                }
+                                */
+
+                        }//end addOnSuccessListener()
                         .addOnFailureListener{
                             Log.d(ContentValues.TAG, "Failed to add place")
                             Toast.makeText(context, "Failed to add place", Toast.LENGTH_SHORT).show()
                             addBtn.visibility = View.INVISIBLE
                             cancelBtn.visibility = View.INVISIBLE
                         }
-                    fStore.collection("places").add(placeDetailsMap)
-                        .addOnSuccessListener {
-                            Log.d(ContentValues.TAG, "Place Added To Full Places List")
-                        }
-                        .addOnFailureListener{
-                            Log.d(ContentValues.TAG, "Place Failed to add to Full List")
-                        }
-                }
+
+                }//end onClickListener()
 
                 cancelBtn.setOnClickListener{
                     newPlaceMarker?.remove()
                     Toast.makeText(context, "Cancelled", Toast.LENGTH_SHORT).show()
                     addBtn.visibility = View.INVISIBLE
                     cancelBtn.visibility = View.INVISIBLE
-                }
-            }
+                }//end onClickListener
+
+            }//end onPlaceSelected()
 
             override fun onError(status: Status) {
                 Log.i(ContentValues.TAG, "Could not find place: $status")
 
-            }
+            }//end onError()
 
-        })
+        })//end setOnPlaceSelectedListener()
+
     }//end initAutocompletePlaces()
 
 

@@ -17,10 +17,10 @@ import com.example.travelplanner.R
 import com.example.travelplanner.activities.PlacesActivity
 import com.example.travelplanner.activities.TripsActivity
 import com.example.travelplanner.adapters.TripAdapter
+import com.example.travelplanner.data.SharedData
 import com.example.travelplanner.data.TripDetails
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
-import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
@@ -33,7 +33,7 @@ class TripsListFragment : Fragment() {
     private lateinit var auth: FirebaseAuth
 
     private lateinit var tripsActivity: TripsActivity
-    private lateinit var newTripMapFragment: NewTripMapFragment
+    private lateinit var newTripMapFragment: NewTripFragment
     private lateinit var newTripBtn: Button
 
     //recycler view
@@ -53,7 +53,7 @@ class TripsListFragment : Fragment() {
 
         tripsActivity = activity as TripsActivity
 
-        tripsList = tripsActivity.tripsList
+        tripsList = SharedData.tripsList
         newTripBtn = view?.findViewById(R.id.new_trip_btn)!!
 
         tripsRecyclerView = view?.findViewById(R.id.tripsRecyclerView)!!
@@ -87,10 +87,12 @@ class TripsListFragment : Fragment() {
                 val coordinates = tripsList[position].coordinates
                 val startDate = tripsList[position].startDate
                 val endDate = tripsList[position].endDate
+                val locationRef = tripsList[position].locationRef
                 Log.w(TAG, "tripId: $tripId, tripName: $tripName, coordinates: $coordinates, startDate: $startDate, endDate $endDate")
 
                 val intent = Intent(tripsActivity, PlacesActivity::class.java)
                 intent.putExtra("tripId", tripId)//used for Firebase Document Reference
+                intent.putExtra("tripLocationRef", locationRef)
                 intent.putExtra("tripLatitude", coordinates.latitude)
                 intent.putExtra("tripLongitude", coordinates.longitude)
                 startActivity(intent)
@@ -108,7 +110,7 @@ class TripsListFragment : Fragment() {
 
 
     private fun initFragments() {
-        newTripMapFragment = NewTripMapFragment()
+        newTripMapFragment = NewTripFragment()
 
         newTripBtn.setOnClickListener{
             Log.d(ContentValues.TAG, "Attempting to load NewTripMapFragment");

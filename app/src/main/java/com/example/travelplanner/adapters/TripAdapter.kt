@@ -43,7 +43,7 @@ class TripAdapter(private val tripsList : ArrayList<TripDetails>) : RecyclerView
 
     }//end onBindViewHolder()
 
-    private val sdf = SimpleDateFormat("dd/MM/yyyy")
+    private val sdf = SimpleDateFormat("dd/MM/yyyy HH:mm")
     private fun getDateString(time: Long) : String = sdf.format(time * 1000)
 
     override fun getItemCount(): Int {

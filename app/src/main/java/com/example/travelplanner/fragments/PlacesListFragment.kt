@@ -30,7 +30,7 @@ import kotlin.collections.ArrayList
 
 class PlacesListFragment() : Fragment() {
 
-    //Firestore
+    //Firebase
     private lateinit var fStore: FirebaseFirestore
     private lateinit var auth: FirebaseAuth
     private lateinit var tripsReference: DocumentReference
@@ -67,7 +67,6 @@ class PlacesListFragment() : Fragment() {
     }//end onActivityCreated()
 
 
-
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -77,20 +76,6 @@ class PlacesListFragment() : Fragment() {
 
     }//end OnCreateView()
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-
-    }
-
-    override fun onStart() {
-        super.onStart()
-    }
-
-
-
-    override fun onResume() {
-        super.onResume()
-    }
 
     private fun displayPlaces() {
         placesRecyclerView.layoutManager = LinearLayoutManager(this.placesActivity)
@@ -134,7 +119,7 @@ class PlacesListFragment() : Fragment() {
                 adapter.notifyItemMoved(fromPos, toPos)
 
                 return false // true if moved, false otherwise
-            }
+            }//end onMove()
 
             override fun onSwiped(viewHolder: ViewHolder, direction: Int) {
                 // remove from adapter
@@ -146,7 +131,8 @@ class PlacesListFragment() : Fragment() {
                         adapter.notifyItemRemoved(position)
                     }
                 }
-            }
+            }//end onSwiped()
+
         }//end simpleCallback
 
 

@@ -5,9 +5,17 @@ import com.google.firebase.firestore.GeoPoint
 
 data class TripDetails(
     var id: String,
-    var name: String,
+    var address: String?,
     var coordinates: GeoPoint,
-    var startDate: Timestamp,
     var endDate: Timestamp,
-    var isItineraryGenerated: Boolean
+    @field:JvmField
+    var isItineraryGenerated: Boolean,
+    var locationId: String,
+    var locationRef: String,
+    var name: String,
+    var startDate: Timestamp,
+    var types: ArrayList<String>?,
+    var utcOffset: Int?
+
+
 )
