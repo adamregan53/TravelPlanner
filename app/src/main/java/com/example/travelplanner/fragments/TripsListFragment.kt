@@ -73,6 +73,17 @@ class TripsListFragment : Fragment() {
     }//end onCreateView()
 
 
+    override fun onResume() {
+        super.onResume()
+        Log.w(TAG, "TripsListFragment: onResume() called")
+
+        updateTripsList()
+    }
+
+    private fun updateTripsList() {
+        Log.w(ContentValues.TAG, "TripsListFragment: updatePlacesList() called")
+        adapter.notifyDataSetChanged()
+    }
 
     private fun displayTrips() {
         tripsRecyclerView.layoutManager = LinearLayoutManager(this.tripsActivity)

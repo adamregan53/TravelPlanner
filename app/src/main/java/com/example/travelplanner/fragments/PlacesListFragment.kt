@@ -76,6 +76,20 @@ class PlacesListFragment() : Fragment() {
 
     }//end OnCreateView()
 
+    override fun onResume() {
+        super.onResume()
+        Log.w(ContentValues.TAG, "PlacesListFragment: onResume() called")
+
+        updatePlacesList()
+
+    }
+
+    private fun updatePlacesList() {
+        Log.w(ContentValues.TAG, "PlacesListFragment: updatePlacesList() called")
+
+        adapter.notifyDataSetChanged()
+    }
+
 
     private fun displayPlaces() {
         placesRecyclerView.layoutManager = LinearLayoutManager(this.placesActivity)

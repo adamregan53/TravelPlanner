@@ -59,6 +59,35 @@
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/accept_recommend_buttons"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="20dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent">
+
+        <Button
+            android:id="@+id/addRecommendBtn"
+            android:layout_width="120dp"
+            android:layout_height="60dp"
+            android:text="Add Place"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintLeft_toRightOf="parent"/>
+
+        <Button
+            android:id="@+id/cancelRecommendBtn"
+            android:layout_width="120dp"
+            android:layout_height="60dp"
+            android:layout_marginHorizontal="10dp"
+            android:text="Cancel"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintLeft_toRightOf="@+id/addRecommendBtn"/>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
 
     <androidx.cardview.widget.CardView
         android:id="@+id/place_info_card"
@@ -323,10 +352,60 @@
 
             </LinearLayout>
 
+            <Button
+                android:id="@+id/recommendation_btn"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Find Similar Places"
+                android:layout_marginRight="10dp"
+                android:layout_marginLeft="10dp"
+                android:layout_marginTop="10dp" />
+
         </LinearLayout>
 
 
     </androidx.cardview.widget.CardView>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/recommendation_view"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        android:background="@color/white"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
+
+        <TextView
+            android:id="@+id/recommendation_header"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/quantum_grey200"
+            android:gravity="center"
+            android:padding="10dp"
+            android:text="Recommendations"
+            app:layout_constraintBottom_toTopOf="@id/recommendation_recyclerview" />
+
+        <View
+            android:id="@+id/close_recommendations_btn"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_gravity="right"
+            android:background="@drawable/ic_baseline_close_24"
+            android:foreground="?attr/selectableItemBackground"
+            app:layout_constraintBottom_toBottomOf="@+id/recommendation_header"
+            app:layout_constraintEnd_toEndOf="@+id/recommendation_header" />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recommendation_recyclerview"
+            android:layout_width="match_parent"
+            android:layout_height="300dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent" />
+
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
 
 

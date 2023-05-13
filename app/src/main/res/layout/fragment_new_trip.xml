@@ -6,6 +6,17 @@
     android:layout_height="match_parent"
     tools:context=".fragments.NewTripFragment">
 
+    <TextView
+        android:id="@+id/new_trip_header"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Previously Searched Locations"
+        android:background="@color/quantum_grey200"
+        android:padding="10dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/trip_suggestion_recyclerview"
         android:layout_width="match_parent"
@@ -13,7 +24,7 @@
         app:layout_constraintBottom_toTopOf="@id/cancel_trip_btn"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toBottomOf="@id/new_trip_header" />
 
     <androidx.cardview.widget.CardView
         android:id="@+id/enter_trip_info"
@@ -86,15 +97,6 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/end_date_lbl" />
 
-            <Button
-                android:id="@+id/set_time_btn"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginLeft="10dp"
-                android:layout_marginRight="10dp"
-                android:text="Set Arrival And Departure Time"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/set_date_btn" />
 
             <Button
                 android:id="@+id/confirm_trip_info_btn"
@@ -104,7 +106,7 @@
                 android:text="Confirm"
                 app:layout_constraintEnd_toStartOf="@id/cancel_trip_info_btn"
                 app:layout_constraintHorizontal_chainStyle="packed"
-                app:layout_constraintTop_toBottomOf="@+id/set_time_btn"
+                app:layout_constraintTop_toBottomOf="@+id/set_date_btn"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintStart_toStartOf="parent" />
 
@@ -125,13 +127,25 @@
     </androidx.cardview.widget.CardView>
 
     <Button
+        android:id="@+id/get_new_trip_btn"
+        android:layout_width="160dp"
+        android:layout_height="wrap_content"
+        android:layout_margin="5dp"
+        android:text="New Place"
+        app:layout_constraintEnd_toStartOf="@id/cancel_trip_btn"
+        app:layout_constraintHorizontal_chainStyle="packed"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <Button
         android:id="@+id/cancel_trip_btn"
-        android:layout_width="match_parent"
+        android:layout_width="160dp"
         android:layout_height="wrap_content"
         android:layout_margin="5dp"
         android:text="Cancel"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintStart_toEndOf="@id/get_new_trip_btn" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

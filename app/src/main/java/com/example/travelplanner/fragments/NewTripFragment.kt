@@ -3,6 +3,7 @@ package com.example.travelplanner.fragments
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
 import android.content.ContentValues
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import androidx.fragment.app.Fragment
@@ -14,6 +15,7 @@ import androidx.cardview.widget.CardView
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.travelplanner.R
+import com.example.travelplanner.activities.PlacesActivity
 import com.example.travelplanner.activities.TripsActivity
 import com.example.travelplanner.adapters.TripSuggestionAdapter
 import com.example.travelplanner.data.NewTripDetails
@@ -54,7 +56,6 @@ class NewTripFragment : Fragment(){//end class
     private lateinit var startDateTxt: TextView
     private lateinit var endDateTxt: TextView
     private lateinit var setDateBtn: Button
-    private lateinit var setTimeBtn: Button
     private lateinit var confirmTripInfoBtn: Button
     private lateinit var cancelTripInfoBtn: Button
 
@@ -118,7 +119,6 @@ class NewTripFragment : Fragment(){//end class
         startDateTxt = view.findViewById(R.id.start_date_txt)
         endDateTxt = view.findViewById(R.id.end_date_txt)
         setDateBtn = view.findViewById(R.id.set_date_btn)
-        setTimeBtn = view.findViewById(R.id.set_time_btn)
         confirmTripInfoBtn = view.findViewById(R.id.confirm_trip_info_btn)
         cancelTripInfoBtn = view.findViewById(R.id.cancel_trip_info_btn)
 
@@ -127,9 +127,6 @@ class NewTripFragment : Fragment(){//end class
 
         setDateBtn.setOnClickListener{
             showDateRangePicker()
-        }
-
-        setTimeBtn.setOnClickListener{
         }
 
         val sdf = SimpleDateFormat("dd/MM/yyyy HH:mm")
@@ -142,7 +139,8 @@ class NewTripFragment : Fragment(){//end class
                 Log.w(ContentValues.TAG, "Confirm Trip: newStartDate TimeStamp -> ${getDateString(newStartDate.seconds)}")
                 Log.w(ContentValues.TAG, "Confirm Trip: newEndDate TimeStamp -> ${getDateString(newEndDate.seconds)}")
 
-                //addNewTrip()
+
+                addNewTrip()
             }
             else if(tripStartDate == null && tripEndDate != null){
                 Toast.makeText(
@@ -393,6 +391,13 @@ class NewTripFragment : Fragment(){//end class
 
         fStore.collection("users").document(currentUserId).collection("trips").add(newTripMap)
             .addOnSuccessListener {
+
+                Log.d(ContentValues.TAG, "Attempting to load NewTripMapFragment");
+                val tripListFragment: TripsListFragment = TripsListFragment()
+                tripsActivity.supportFragmentManager.beginTransaction().apply {
+                    replace(R.id.tripsFlFragment, tripListFragment)
+                    commit()
+                }
                 Toast.makeText(
                     this.tripsActivity,
                     "Successfully added new trip",

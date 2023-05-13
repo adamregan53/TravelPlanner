@@ -14,11 +14,20 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.cardview.widget.CardView
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.app.ActivityCompat
+import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.DividerItemDecoration
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.example.travelplanner.BuildConfig
 import com.example.travelplanner.data.PlaceDetails
 import com.example.travelplanner.R
 import com.example.travelplanner.activities.PlacesActivity
+import com.example.travelplanner.adapters.PlaceAdapter
+import com.example.travelplanner.adapters.RecommendationAdapter
+import com.example.travelplanner.data.api.PostRequest
+import com.example.travelplanner.data.api.PostService
 
 import com.google.android.gms.common.api.Status
 import com.google.android.gms.maps.*
@@ -34,11 +43,12 @@ import com.google.android.libraries.places.widget.AutocompleteSupportFragment
 import com.google.android.libraries.places.widget.listener.PlaceSelectionListener
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
-import com.google.firebase.firestore.DocumentReference
-import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.GeoPoint
+import com.google.firebase.firestore.*
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 
 
 class PlacesMapFragment() : Fragment(), OnMapReadyCallback,
@@ -64,6 +74,8 @@ class PlacesMapFragment() : Fragment(), OnMapReadyCallback,
     //view components
     private lateinit var addBtn: Button//add place button from places autocomplete
     private lateinit var cancelBtn: Button//cancel add place operation
+    private lateinit var addRecommendBtn: Button
+    private lateinit var cancelRecommendBtn: Button
 
     //place info card
     private lateinit var placeInfoLayout: CardView //main info layout
@@ -83,6 +95,18 @@ class PlacesMapFragment() : Fragment(), OnMapReadyCallback,
     private lateinit var placeInfoRating: TextView
     private lateinit var placeInfoTotalRating: TextView
 
+    //recommendation
+    private lateinit var recommendationView: ConstraintLayout
+    private lateinit var recommendationHeader: TextView
+    private lateinit var recommendationRecyclerView: RecyclerView
+    private lateinit var adapter: RecommendationAdapter
+    private lateinit var recommendationButton: Button
+    private lateinit var closeRecommendationButton: View
+    private val service = PostService.create()
+    private lateinit var postRecommendation: PostRequest
+    private lateinit var recommendationResponseList: ArrayList<String>
+    private lateinit var recommendationPlacesList: ArrayList<PlaceDetails>
+
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
@@ -99,6 +123,8 @@ class PlacesMapFragment() : Fragment(), OnMapReadyCallback,
         fStore = Firebase.firestore
 
         placeDetailsArray = placesActivity.placeDetailsArray
+        recommendationResponseList = ArrayList()
+        recommendationPlacesList = arrayListOf()
 
         initPlacesAutocomplete()
 
@@ -127,6 +153,10 @@ class PlacesMapFragment() : Fragment(), OnMapReadyCallback,
         cancelBtn = view.findViewById(R.id.cancelBtn)
         addBtn.visibility = View.INVISIBLE
         cancelBtn.visibility = View.INVISIBLE
+        addRecommendBtn = view.findViewById(R.id.addRecommendBtn)
+        cancelRecommendBtn = view.findViewById(R.id.cancelRecommendBtn)
+        addRecommendBtn.visibility = View.INVISIBLE
+        cancelRecommendBtn.visibility = View.INVISIBLE
 
         //placeInfoCard
         placeInfoLayout = view.findViewById(R.id.place_info_card)
@@ -157,7 +187,17 @@ class PlacesMapFragment() : Fragment(), OnMapReadyCallback,
         placeInfoRating = view.findViewById(R.id.place_rating)
         placeInfoTotalRating = view.findViewById(R.id.place_total_rating)
 
+        //recommendation
+        recommendationView = view.findViewById(R.id.recommendation_view)
+        recommendationHeader = view.findViewById(R.id.recommendation_header)
+        recommendationRecyclerView = view.findViewById(R.id.recommendation_recyclerview)
+        recommendationButton = view.findViewById(R.id.recommendation_btn)
+        closeRecommendationButton = view.findViewById(R.id.close_recommendations_btn)
+
+
     }//end onViewCreated()
+
+
 
     private fun collapseInfoCard() {
         TransitionManager.beginDelayedTransition(placeInfoLayout, AutoTransition())
@@ -224,6 +264,8 @@ class PlacesMapFragment() : Fragment(), OnMapReadyCallback,
 
         map.moveCamera(CameraUpdateFactory.newLatLngZoom(tripLocation, 12f))
 
+
+
         displayPlaceMarkers()
 
         map.setOnMarkerClickListener{marker ->
@@ -241,8 +283,24 @@ class PlacesMapFragment() : Fragment(), OnMapReadyCallback,
             placeInfoRating.text = ""
             placeInfoTotalRating.text = ""
 
+            var docId: String
+            var placeId: String
+            var locationRef: String
+            var name: String
+            var types: ArrayList<String>
+
             for(place in placeDetailsArray){
-                if(place.name == marker.title){
+                if(place.placeId == marker.title){
+
+                    docId = place.docId.toString()
+                    placeId = place.placeId.toString()
+                    locationRef = placesActivity.tripLocationRef
+                    name = place.name.toString()
+                    types = place.types as ArrayList<String>
+                    postRecommendation = PostRequest(docId, placeId, locationRef, name, types)
+                    Log.d(ContentValues.TAG, "Post Request: $postRecommendation");
+
+
                     placeInfoName.text = place.name.toString()
                     placeInfoTypes.text = place.types.toString()
                     placeInfoAddress.text = place.address
@@ -263,30 +321,263 @@ class PlacesMapFragment() : Fragment(), OnMapReadyCallback,
                     }
                 }
             }
+
+            recommendationButton.setOnClickListener{
+                //reset lists
+                recommendationResponseList.clear()
+                recommendationPlacesList.clear()
+
+                lifecycleScope.launch(Dispatchers.IO){
+
+                    if (postRecommendation != null){
+                        val postResponse = service.createPost(postRecommendation)
+                        if (postResponse != null) {
+                            for(response in postResponse){
+                                recommendationResponseList.add(response.docId)
+
+                                Log.d(ContentValues.TAG, "Post Response: ${response.docId}");
+
+                            }
+                            for(id in recommendationResponseList) {
+                                Log.d(
+                                    ContentValues.TAG,
+                                    "RecommendationResponseList: ${id}"
+                                );
+                            }
+                            placesActivity.runOnUiThread {
+                                Log.d(ContentValues.TAG, "openRecommendationView() attempting to open");
+                                openRecommendationView()
+
+                            }
+
+                            Log.d(ContentValues.TAG, "Attempting to call getRecommendPlaces()");
+
+                        }else{
+                            Toast.makeText(context, "No Response from Recommendation API", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                }//end lifeCycleScope
+            }//end setOnClickListener()
+
             TransitionManager.beginDelayedTransition(placeInfoLayout, AutoTransition())
             placeInfoLayout.visibility = View.VISIBLE
 
             true
-        }
+        }//end onMarkerClicked()
 
     }//end onMapReady()
+
+    private fun openRecommendationView() {
+        Log.d(ContentValues.TAG, "openRecommendationView() opened");
+
+        placeInfoLayout.visibility = View.GONE
+        TransitionManager.beginDelayedTransition(recommendationView, AutoTransition())
+        recommendationView.visibility = View.VISIBLE
+        recommendationRecyclerView.visibility = View.VISIBLE
+        closeRecommendationButton.setOnClickListener {
+            closeRecommendationView()
+        }
+        getRecommendedPlaces()
+    }
+
+    private fun closeRecommendationView(){
+        TransitionManager.beginDelayedTransition(recommendationView, AutoTransition())
+        recommendationView.visibility = View.GONE
+    }
+
+    private  fun getRecommendedPlaces() {
+        Log.d(ContentValues.TAG, "getRecommendedPlaces() called");
+
+        for((index, docId) in recommendationResponseList.withIndex()){
+            locationsReference.collection("places").document(docId).get()
+                .addOnSuccessListener { result ->
+                    Log.d(ContentValues.TAG, "addOnSuccessListener: Found Place");
+                    val docId = result.id
+                    val name = result.data?.get("name").toString()
+                    val placeId = result.data?.get("id").toString()
+                    val coordinates = result.data?.get("coordinates") as GeoPoint
+                    val types = result.data!!.get("types") as ArrayList<*>
+                    val typesArray: ArrayList<String> = ArrayList()
+                    for(type in types){
+                        typesArray.add(type.toString())
+                    }
+                    val address = result.data!!.get("address").toString()
+
+                    val openingHoursArray: ArrayList<Any> = ArrayList()
+                    if(isDocumentNull(result,"openingHours")){
+                        val openingHours = result.data!!.get("openingHours") as ArrayList<Any>
+                        for(openHours in openingHours) {
+                            val map = openHours as HashMap<*, *>
+                            openingHoursArray.add(map)
+                        }
+                    }
+
+                    val openingHoursTextArray: ArrayList<String> = ArrayList()
+                    if(isDocumentNull(result, "openingHoursText")){
+                        val openingHoursText = result.data!!.get("openingHoursText") as ArrayList<String>
+                        for(openingHours in openingHoursText){
+                            openingHoursTextArray.add(openingHoursText.toString())
+                        }
+                    }
+
+                    var rating: Double? = null
+                    if(isDocumentNull(result, "rating")){
+                        rating = result.data!!.get("rating") as Double
+                    }
+
+                    var ratingsTotal: Int? = null
+                    if(isDocumentNull(result, "totalRatings")){
+                        var ratingsTotalLong = result.data!!.get("totalRatings") as Long
+                        ratingsTotal = ratingsTotalLong.toInt()
+                    }
+
+                    val placeDetail = PlaceDetails(docId, name, placeId, coordinates, typesArray, address, openingHoursArray, openingHoursTextArray, rating, ratingsTotal)
+                    Log.d(ContentValues.TAG, "addOnSuccessListener: placeDetail: $placeDetail");
+                    recommendationPlacesList.add(placeDetail)
+                    Log.d(ContentValues.TAG, "addOnSuccessListener: recommendationList: $recommendationPlacesList");
+
+                    initRecommendationRecyclerView()
+                }
+                .addOnFailureListener {
+                    Toast.makeText(context, "Could Not retrieve recommendations from firebase", Toast.LENGTH_SHORT).show()
+
+                }
+
+        }
+
+    }//end getRecommendedPlaces()
+
+
+
+    private fun updateRecommendations() {
+        Log.d(ContentValues.TAG, "updateRecommendations() called");
+        Log.d(ContentValues.TAG, "Update: recommendationPlacesList -> ${recommendationPlacesList}");
+
+        adapter.notifyDataSetChanged()
+        Log.d(ContentValues.TAG, "adapter itemCount -> ${adapter.itemCount}");
+
+        Log.d(ContentValues.TAG, "openRecommendationView() attempting to open");
+        openRecommendationView()
+    }//end displayRecommendations()
+
+    private fun initRecommendationRecyclerView() {
+        Log.d(ContentValues.TAG, "initRecommendationRecyclerView() called");
+        recommendationRecyclerView.layoutManager = LinearLayoutManager(this.placesActivity)
+
+        adapter = RecommendationAdapter(recommendationPlacesList)
+        recommendationRecyclerView.adapter = adapter
+        adapter.setOnItemClickListener(object: RecommendationAdapter.onItemClickListener{
+            override fun onItemClick(position: Int) {
+                Log.d(ContentValues.TAG, "recommendationPlacesList position: $position -> ${recommendationPlacesList[position]}");
+                locateRecommendation(position)
+            }
+
+        })
+
+        val dividerItemDecoration = DividerItemDecoration(this.placesActivity, DividerItemDecoration.VERTICAL)
+        recommendationRecyclerView.addItemDecoration(dividerItemDecoration)
+
+        Log.d(ContentValues.TAG, "initRecommendationsRecyclerView(): recommendationPlacesList -> ${recommendationPlacesList}");
+
+
+    }
+
+    private fun locateRecommendation(position: Int) {
+        val lat = recommendationPlacesList[position].coordinates?.latitude
+        val lon = recommendationPlacesList[position].coordinates?.longitude
+        val latLng: LatLng = LatLng(lat!!, lon!!)
+        val location: CameraUpdate = CameraUpdateFactory.newLatLngZoom(latLng, 16f)
+        map.animateCamera(location)
+
+        addRecommendBtn.visibility = View.VISIBLE
+        cancelRecommendBtn.visibility = View.VISIBLE
+
+        var placeDetailsMap = hashMapOf<Any, Any>()
+        val name: String? = recommendationPlacesList[position].name
+        val placeId: String? = recommendationPlacesList[position].placeId
+        val coordinates: GeoPoint? = recommendationPlacesList[position].coordinates
+        val types: ArrayList<String>? = recommendationPlacesList[position].types
+        val address: String? = recommendationPlacesList[position].address
+        val openingHours: ArrayList<Any>? = recommendationPlacesList[position].openingHours
+        val openingHoursText: ArrayList<String>? = recommendationPlacesList[position].openingHoursText
+        val rating: Double? = recommendationPlacesList[position].rating
+        val totalRatings: Int? = recommendationPlacesList[position].totalRatings
+
+        placeDetailsMap["name"] = name.toString()
+        placeDetailsMap["placeId"] = placeId.toString()
+        placeDetailsMap["coordinates"] = coordinates as GeoPoint
+        placeDetailsMap["types"] = types as ArrayList<String>
+        placeDetailsMap["address"] = address.toString()
+        placeDetailsMap["openingHours"] = openingHours as ArrayList<Any>
+        placeDetailsMap["openingHoursText"] = openingHoursText as ArrayList<String>
+        placeDetailsMap["rating"] = rating as Double
+        placeDetailsMap["totalRatings"] = totalRatings as Int
+
+        val placeDetail: PlaceDetails = PlaceDetails(null, name, placeId, coordinates, types, address, openingHours, openingHoursText, rating, totalRatings)
+
+        var newPlaceMarker: Marker? = null
+        newPlaceMarker = map.addMarker(
+            MarkerOptions()
+                .position(latLng)
+                .title(placeId)
+        )
+
+        addRecommendBtn.setOnClickListener {
+            for(place in placeDetailsArray){
+                if(place.placeId == placeId){
+                    Toast.makeText(context, "Place Already Added", Toast.LENGTH_SHORT).show()
+                    addRecommendBtn.visibility = View.INVISIBLE
+                    cancelRecommendBtn.visibility = View.INVISIBLE
+                }else{
+                    tripsReference.collection("places").add(placeDetailsMap)
+                        .addOnSuccessListener {
+                            Log.d(ContentValues.TAG, "Place Added Successfully")
+                            Toast.makeText(context, "Place Added Successfully", Toast.LENGTH_SHORT).show()
+                            placeDetailsArray.add(placeDetail)
+                            addRecommendBtn.visibility = View.INVISIBLE
+                            cancelRecommendBtn.visibility = View.INVISIBLE
+                        }
+                        .addOnFailureListener {
+                            Log.d(ContentValues.TAG, "Could Not Add Place")
+
+                        }
+                }
+            }
+
+        }
+
+        cancelRecommendBtn.setOnClickListener {
+            newPlaceMarker?.remove()
+            Toast.makeText(context, "Cancelled", Toast.LENGTH_SHORT).show()
+            addRecommendBtn.visibility = View.INVISIBLE
+            cancelRecommendBtn.visibility = View.INVISIBLE
+        }
+
+    }
+
+    private fun isDocumentNull(docRef: DocumentSnapshot, field:String): Boolean{
+        return docRef.data?.get(field) != null
+
+    }//end isDocumentNull()
 
 
     private fun displayPlaceMarkers() {
         Log.d(ContentValues.TAG, "Map Fragment: ${placeDetailsArray}");
 
         for(place in placeDetailsArray){
-            val placeLocation = LatLng(place.coordinates.latitude, place.coordinates.longitude)
+            val placeLocation = LatLng(place.coordinates!!.latitude, place.coordinates!!.longitude)
             map.addMarker(
                 MarkerOptions()
                     .position(placeLocation)
-                    .title(place.name)
+                    .title(place.placeId)
             )
         }
     }//end displayMarkers()
 
 
     private fun initPlacesAutocomplete() {
+        Log.d(ContentValues.TAG, "initPlacesAutocomplete() called");
+
         if(!Places.isInitialized()){
             Places.initialize(this.placesActivity, BuildConfig.MAPS_API_KEY)
         }
@@ -316,6 +607,7 @@ class PlacesMapFragment() : Fragment(), OnMapReadyCallback,
             Place.Field.USER_RATINGS_TOTAL)
         )
 
+        var docId: String? = null
         var placeName: String
         var placeId: String
         var placeCoordinates: GeoPoint
@@ -337,7 +629,6 @@ class PlacesMapFragment() : Fragment(), OnMapReadyCallback,
                 //set info layout to visible
                 placeInfoLayout.visibility = View.INVISIBLE
 
-                //build place details map
                 placeName = place.name.toString()
                 placeDetailsMap["name"] = placeName
 
@@ -392,8 +683,7 @@ class PlacesMapFragment() : Fragment(), OnMapReadyCallback,
                     placeDetailsMap["totalRatings"] = placeTotalRatings as Int
                 }
 
-
-                val placeDetail = PlaceDetails(placeName, placeId, placeCoordinates, placeTypesArray, placeAddress, placeOpeningHoursArray, placeOpeningHoursTextArray, placeRating, placeTotalRatings)
+                val placeDetail = PlaceDetails(docId, placeName, placeId, placeCoordinates, placeTypesArray, placeAddress, placeOpeningHoursArray, placeOpeningHoursTextArray, placeRating, placeTotalRatings)
                 Log.i(ContentValues.TAG, "Place Detail: $placeDetail")
 
                 Log.i(ContentValues.TAG, "Place Detail Map: $placeDetailsMap")
@@ -404,7 +694,7 @@ class PlacesMapFragment() : Fragment(), OnMapReadyCallback,
                 newPlaceMarker = map.addMarker(
                     MarkerOptions()
                         .position(placeLocation)
-                        .title(placeName)
+                        .title(placeId)
                 )
                 val placeLatLng: LatLng = LatLng(placeCoordinates.latitude, placeCoordinates.longitude)
                 val location: CameraUpdate = CameraUpdateFactory.newLatLngZoom(placeLatLng, 16f)
@@ -422,6 +712,7 @@ class PlacesMapFragment() : Fragment(), OnMapReadyCallback,
                             addBtn.visibility = View.INVISIBLE
                             cancelBtn.visibility = View.INVISIBLE
 
+                            //add place to locations
                             locationsReference.collection("places").add(placeDetailsMap)
                                 .addOnSuccessListener {
                                     Log.d(ContentValues.TAG, "Place Added To Locations")
@@ -429,59 +720,6 @@ class PlacesMapFragment() : Fragment(), OnMapReadyCallback,
                                 .addOnFailureListener{
                                     Log.d(ContentValues.TAG, "Place Failed to add to Locations")
                                 }//end addOnFailureListener
-
-                            //add to locations collection
-                            /*
-                            locationsReference.collection("places").whereEqualTo("id", placeId).get()
-                                .addOnSuccessListener { result ->
-                                    //if there is no matching place
-                                    val locationsMap = placeDetailsMap
-                                    var id: String = ""
-                                    var userSearches: Int = 0
-
-                                    if(result.isEmpty){
-                                        userSearches = 1
-                                        locationsMap["userSearches"] = userSearches
-                                        locationsReference.collection("places").add(locationsMap)
-                                            .addOnSuccessListener {
-                                                Log.d(ContentValues.TAG, "Place Added To Locations")
-                                            }//end addOnSuccessListener()
-                                            .addOnFailureListener{
-                                                Log.d(ContentValues.TAG, "Place Failed to add to Locations")
-                                            }//end addOnFailureListener
-                                    }else{
-                                        for(doc in result){
-                                            if(result.size() <= 1){
-                                                id = doc.id
-                                                userSearches = doc.data["userSearches"] as Int
-                                                Log.d(ContentValues.TAG, "Location Doc ID: $id")
-
-                                            }else{
-                                                Log.d(ContentValues.TAG, "List of locations is greater than 1")
-                                            }
-                                        }
-                                        userSearches += 1
-                                        Log.d(ContentValues.TAG, "User Searches after add: $userSearches")
-                                        if(id.isNotEmpty()){
-                                            locationsReference.collection("places").document(id).update("userSearches", userSearches)
-                                                .addOnSuccessListener {
-                                                    Log.d(ContentValues.TAG, "Location userSearches Updated")
-                                                }
-                                                .addOnFailureListener{
-                                                    Log.d(ContentValues.TAG, "Location Failed to Update")
-
-                                                }
-                                        }else{
-                                            Log.d(ContentValues.TAG, "location id is empty")
-                                        }
-
-                                    }
-                                }
-                                .addOnFailureListener{
-                                    Log.d(ContentValues.TAG, "Failed to get locations")
-
-                                }
-                                */
 
                         }//end addOnSuccessListener()
                         .addOnFailureListener{
@@ -508,6 +746,8 @@ class PlacesMapFragment() : Fragment(), OnMapReadyCallback,
             }//end onError()
 
         })//end setOnPlaceSelectedListener()
+
+        initRecommendationRecyclerView()
 
     }//end initAutocompletePlaces()
 

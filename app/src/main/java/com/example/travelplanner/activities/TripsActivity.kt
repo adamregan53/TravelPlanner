@@ -56,8 +56,6 @@ class TripsActivity : DrawerBaseActivity(){//end class
         fStore = Firebase.firestore
         currentUserId = auth.currentUser?.uid.toString()
 
-
-
         retrieveTrips()
 
     }//end onCreate()

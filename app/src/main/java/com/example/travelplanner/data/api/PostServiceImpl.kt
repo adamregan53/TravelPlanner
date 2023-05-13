@@ -11,7 +11,7 @@ class PostServiceImpl(
 
     override suspend fun getPosts(): List<PostResponse> {
         return try {
-            client.get { url(HttpRoutes.POSTS) }
+            client.get { url(HttpRoutes.RECOMMEND) }
         } catch (e: RedirectResponseException) {
             //3xx
             println("Error: ${e.response.status.description}")
@@ -30,10 +30,10 @@ class PostServiceImpl(
         }
     }
 
-    override suspend fun createPost(postRequest: PostResponse): PostResponse? {
+    override suspend fun createPost(postRequest: PostRequest): List<PostResponse>? {
         return try {
-            client.post<PostResponse> {
-                url(HttpRoutes.POSTS)
+            client.post<List<PostResponse>> {
+                url(HttpRoutes.RECOMMEND)
                 contentType(ContentType.Application.Json)
                 body = postRequest
             }

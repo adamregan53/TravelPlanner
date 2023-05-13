@@ -32,7 +32,7 @@ class PlacesActivity : DrawerBaseActivity() {
 
     //Values From TripsActivity
     private lateinit var tripId: String
-    private lateinit var tripLocationRef: String
+    lateinit var tripLocationRef: String
     var tripLatitude: Double = 0.0
     var tripLongitude: Double = 0.0
 
@@ -49,8 +49,6 @@ class PlacesActivity : DrawerBaseActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityPlacesBinding.inflate(layoutInflater)
         setContentView(binding.root)
-
-
         
         //received from TripsActivity
         tripId = intent.getStringExtra("tripId") as String
@@ -80,6 +78,7 @@ class PlacesActivity : DrawerBaseActivity() {
     private fun retrievePlaces() {
         tripsReference.collection("places").get()
             .addOnSuccessListener { result ->
+                var docId: String
                 var placeName: String
                 var placeId: String
                 var placeCoordinates: GeoPoint
@@ -91,8 +90,9 @@ class PlacesActivity : DrawerBaseActivity() {
                 var placeRatingTotal: Int?
 
                 for (document in result) {
+                    docId = document.id
                     placeName = document.data["name"].toString()
-                    placeId = document.id
+                    placeId = document.data["id"].toString()
                     placeCoordinates = document.data["coordinates"] as GeoPoint
                     placeTypesArray = ArrayList()
                     val arrayTypes = document.data["types"] as ArrayList<*>
@@ -130,6 +130,7 @@ class PlacesActivity : DrawerBaseActivity() {
                     }
 
                     placeDetail = PlaceDetails(
+                        docId,
                         placeName,
                         placeId,
                         placeCoordinates,

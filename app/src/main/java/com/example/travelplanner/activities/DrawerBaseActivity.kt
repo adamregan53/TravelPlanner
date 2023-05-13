@@ -12,17 +12,26 @@ import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
 import com.example.travelplanner.R
 import com.google.android.material.navigation.NavigationView
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.ktx.auth
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.ktx.Firebase
 
 open class DrawerBaseActivity : AppCompatActivity() {
     lateinit var drawerLayout: DrawerLayout
     lateinit var actionBarDrawerToggle: ActionBarDrawerToggle
     var clickedNavItem: Int = 0
 
+    private lateinit var auth: FirebaseAuth
+    private lateinit var currentUserId: String
+
     override fun setContentView(view: View?) {
         drawerLayout = layoutInflater.inflate(R.layout.activity_drawer_base, null) as DrawerLayout
         val container:FrameLayout = drawerLayout.findViewById(R.id.activityContainer)
         container.addView(view)
         super.setContentView(drawerLayout)
+
+        auth = Firebase.auth
 
         val toolBar: Toolbar = drawerLayout.findViewById(R.id.toolBar)
         setSupportActionBar(toolBar)
@@ -47,17 +56,13 @@ open class DrawerBaseActivity : AppCompatActivity() {
                     Log.d("MENU_DRAWER_TAG", "Trips Item Selected");
                     clickedNavItem = R.id.nav_trips
                 }
-                R.id.nav_settings -> {
-                    Log.d("MENU_DRAWER_TAG", "Settings Item Selected");
-
-                }
                 R.id.nav_profile -> {
                     Log.d("MENU_DRAWER_TAG", "Profile Item Selected");
-
+                    clickedNavItem = R.id.nav_profile
                 }
                 R.id.nav_logout -> {
                     Log.d("MENU_DRAWER_TAG", "Logout Item Selected");
-
+                    clickedNavItem = R.id.nav_logout
                 }
             }
             drawerLayout.closeDrawer(GravityCompat.START)
@@ -83,6 +88,15 @@ open class DrawerBaseActivity : AppCompatActivity() {
                     }
                     R.id.nav_trips -> {
                         val intent = Intent(applicationContext, TripsActivity::class.java)
+                        startActivity(intent)
+                    }
+                    R.id.nav_profile -> {
+                        val intent = Intent(applicationContext, ProfileActivity::class.java)
+                        startActivity(intent)
+                    }
+                    R.id.nav_logout -> {
+                        auth.signOut()
+                        val intent = Intent(applicationContext, LoginActivity::class.java)
                         startActivity(intent)
                     }
                 }

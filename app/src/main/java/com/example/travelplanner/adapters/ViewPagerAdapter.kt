@@ -13,7 +13,7 @@ import androidx.viewpager2.adapter.FragmentStateAdapter as FragmentStateAdapter
 class ViewPagerAdapter(fragmentManager: FragmentManager, lifecycle:Lifecycle, ): FragmentStateAdapter(fragmentManager, lifecycle) {
 
     override fun getItemCount(): Int {
-        return 3
+        return 2
     }//end getItemCount()
 
     override fun createFragment(position: Int): Fragment {
@@ -22,10 +22,7 @@ class ViewPagerAdapter(fragmentManager: FragmentManager, lifecycle:Lifecycle, ):
                 PlacesListFragment()
             }
             1 -> {
-                PlacesItineraryFragment()
-            }
-            2 -> {
-                PlacesItineraryFragment()
+                PlacesMapFragment()
             }
             else -> {
                 PlacesListFragment()

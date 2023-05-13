@@ -10,7 +10,7 @@ interface PostService {
 
     suspend fun getPosts(): List<PostResponse>
 
-    suspend fun createPost(postRequest: PostResponse): PostResponse?
+    suspend fun createPost(postRequest: PostRequest): List<PostResponse>?
 
     companion object {
         fun create(): PostService {
