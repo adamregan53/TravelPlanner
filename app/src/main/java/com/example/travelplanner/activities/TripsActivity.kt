@@ -8,7 +8,6 @@ import com.example.travelplanner.R
 import com.example.travelplanner.data.SharedData
 import com.example.travelplanner.data.TripDetails
 import com.example.travelplanner.databinding.ActivityTripsBinding
-import com.example.travelplanner.fragments.TestExpandingList
 import com.example.travelplanner.fragments.PlacesItineraryFragment
 import com.example.travelplanner.fragments.TripsListFragment
 import com.google.firebase.Timestamp
@@ -81,7 +80,6 @@ class TripsActivity : DrawerBaseActivity(){//end class
                     var tripName: String
                     var startDate: Timestamp
                     var typesArray: ArrayList<String>
-                    var utcOffset: Int
 
                     for(document in result){
                         Log.d(TAG, "${document.id} => ${document.data["name"]}")
@@ -99,8 +97,6 @@ class TripsActivity : DrawerBaseActivity(){//end class
                         for(type in types){
                             typesArray.add(type.toString())
                         }
-                        val utcOffsetLong = document.data["utcOffset"] as Long
-                        utcOffset = utcOffsetLong.toInt()
 
                         val tripDetail = TripDetails(
                             tripId,
@@ -112,8 +108,7 @@ class TripsActivity : DrawerBaseActivity(){//end class
                             locationRef,
                             tripName,
                             startDate,
-                            typesArray,
-                            utcOffset)
+                            typesArray)
                         SharedData.tripsList.add(tripDetail)
                     }
 
@@ -138,7 +133,6 @@ class TripsActivity : DrawerBaseActivity(){//end class
     private fun initFragments() {
         tripsListFragment = TripsListFragment()
         tripsItineraryFragment = PlacesItineraryFragment()
-        val testExpandingList: TestExpandingList = TestExpandingList()
 
         supportFragmentManager.beginTransaction().apply {
             replace(R.id.tripsFlFragment, tripsListFragment)

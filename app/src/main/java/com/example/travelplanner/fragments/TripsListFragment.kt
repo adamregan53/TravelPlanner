@@ -72,6 +72,10 @@ class TripsListFragment : Fragment() {
         return inflater.inflate(R.layout.fragment_trips_list, container, false)
     }//end onCreateView()
 
+    override fun onStart() {
+        super.onStart()
+        updateTripsList()
+    }
 
     override fun onResume() {
         super.onResume()

@@ -8,6 +8,5 @@ data class TripSuggestion(
     var locationCoordinates: GeoPoint,
     var locationId: String,
     var name: String,
-    var types: ArrayList<String>,
-    var utcOffset: Int
+    var types: ArrayList<String>
 )

@@ -152,35 +152,15 @@
                 android:gravity="center"
                 android:orientation="horizontal">
 
-                <View
-                    android:id="@+id/star1"
-                    android:layout_width="15dp"
-                    android:layout_height="15dp"
-                    android:background="@drawable/ic_baseline_star_24" />
-
-                <View
-                    android:id="@+id/star2"
-                    android:layout_width="15dp"
-                    android:layout_height="15dp"
-                    android:background="@drawable/ic_baseline_star_24" />
-
-                <View
-                    android:id="@+id/star3"
-                    android:layout_width="15dp"
-                    android:layout_height="15dp"
-                    android:background="@drawable/ic_baseline_star_24" />
-
-                <View
-                    android:id="@+id/star4"
-                    android:layout_width="15dp"
-                    android:layout_height="15dp"
-                    android:background="@drawable/ic_baseline_star_24" />
-
-                <View
-                    android:id="@+id/star5"
-                    android:layout_width="15dp"
-                    android:layout_height="15dp"
-                    android:background="@drawable/ic_baseline_star_half_24" />
+                <TextView
+                    android:id="@+id/place_rating_lbl"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:text="Rating"
+                    android:textAppearance="@style/TextAppearance.AppCompat.Body1"
+                    android:textColor="#B3B3B3"
+                    android:textSize="12sp" />
 
                 <TextView
                     android:id="@+id/place_rating"
@@ -238,39 +218,6 @@
                     android:textAppearance="@style/TextAppearance.AppCompat.Body1"
                     android:textColor="#B3B3B3"
                     android:textSize="12sp" />
-
-                <LinearLayout
-                    android:id="@+id/opening_hours_layout"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:padding="10dp">
-
-                    <TextView
-                        android:id="@+id/is_place_open_txt"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Open"
-                        android:textAppearance="@style/TextAppearance.AppCompat.Body1"
-                        android:textColor="#34b710"
-                        android:textSize="12sp" />
-
-                    <TextView
-                        android:id="@+id/when_open_close_txt"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginLeft="10dp"
-                        android:text="Closes 1 a.m."
-                        android:textAppearance="@style/TextAppearance.AppCompat.Body1"
-                        android:textSize="12sp" />
-
-                    <View
-                        android:layout_width="18dp"
-                        android:layout_height="18dp"
-                        android:layout_marginLeft="10dp"
-                        android:background="@drawable/ic_baseline_keyboard_arrow_down_24" />
-
-
-                </LinearLayout>
 
                 <TextView
                     android:id="@+id/place_opening_hours_monday_txt"

@@ -74,11 +74,10 @@ class NewTripFragment : Fragment(){//end class
     private lateinit var newTripName: String
     private lateinit var newStartDate: Timestamp
     private lateinit var newTripTypes: ArrayList<String>
-    private var newUtcOffset: Int = 0
 
     //recycler view
     private lateinit var tripSuggestionRecyclerView: RecyclerView
-    private lateinit var adapter: TripSuggestionAdapter
+    private lateinit var adapterSuggestion: TripSuggestionAdapter
 
     //trips suggestion list
     private lateinit var tripSuggestionList: ArrayList<TripSuggestion>
@@ -291,7 +290,6 @@ class NewTripFragment : Fragment(){//end class
         var locationAddress: String
         var locationCoordinates: GeoPoint
         var locationTypes: ArrayList<String> = ArrayList()
-        var locationUtcOffset: Int = 0
         var tripSuggestion: TripSuggestion
 
         if(SharedData.tripSuggestionList.isEmpty()) {
@@ -303,12 +301,10 @@ class NewTripFragment : Fragment(){//end class
                         locationCoordinates = document.data["coordinates"] as GeoPoint
                         locationId = document.data["id"].toString()
                         locationName = document.data["name"].toString()
-                        val types = document.data["types"] as ArrayList<*>
+                        val types = document.data["types"] as ArrayList<String>
                         for (type in types) {
                             locationTypes.add(type.toString())
                         }
-                        val locationUtcOffsetLong = document.data["utcOffset"] as Long
-                        locationUtcOffset = locationUtcOffsetLong.toInt()
 
                         tripSuggestion = TripSuggestion(
                             locationDocId,
@@ -316,8 +312,7 @@ class NewTripFragment : Fragment(){//end class
                             locationCoordinates,
                             locationId,
                             locationName,
-                            locationTypes,
-                            locationUtcOffset
+                            types
                         )
                         Log.w(ContentValues.TAG, "tripsSuggestion: $tripSuggestion")
                         tripSuggestionList.add(tripSuggestion)
@@ -349,9 +344,9 @@ class NewTripFragment : Fragment(){//end class
         Log.w(ContentValues.TAG, "displayTripsSuggestions() called")
 
         tripSuggestionRecyclerView.layoutManager = LinearLayoutManager(this.tripsActivity)
-        adapter = TripSuggestionAdapter(tripSuggestionList)
-        tripSuggestionRecyclerView.adapter = adapter
-        adapter.setOnItemClickListener(object: TripSuggestionAdapter.onItemClickListener{
+        adapterSuggestion = TripSuggestionAdapter(tripSuggestionList)
+        tripSuggestionRecyclerView.adapter = adapterSuggestion
+        adapterSuggestion.setOnItemClickListener(object: TripSuggestionAdapter.onItemClickListener{
             override fun onItemClick(position: Int) {
                 Log.w(ContentValues.TAG, "Trip Suggestion: ${tripSuggestionList[position]}")
                 enterTripCardView.visibility = View.VISIBLE
@@ -368,7 +363,6 @@ class NewTripFragment : Fragment(){//end class
                 for(type in types){
                     newTripTypes.add(type)
                 }
-                newUtcOffset = tripSuggestionList[position].utcOffset
             }
 
         })
@@ -387,7 +381,6 @@ class NewTripFragment : Fragment(){//end class
         newTripMap["name"] = newTripName
         newTripMap["startDate"] = newStartDate
         newTripMap["types"] = newTripTypes
-        newTripMap["utcOffset"] = newUtcOffset
 
         fStore.collection("users").document(currentUserId).collection("trips").add(newTripMap)
             .addOnSuccessListener {

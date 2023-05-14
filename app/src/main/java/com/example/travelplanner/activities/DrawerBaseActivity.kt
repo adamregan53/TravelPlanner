@@ -11,6 +11,7 @@ import androidx.appcompat.widget.Toolbar
 import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
 import com.example.travelplanner.R
+import com.example.travelplanner.data.SharedData
 import com.google.android.material.navigation.NavigationView
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
@@ -96,6 +97,8 @@ open class DrawerBaseActivity : AppCompatActivity() {
                     }
                     R.id.nav_logout -> {
                         auth.signOut()
+                        SharedData.tripsList.clear()
+                        SharedData.tripSuggestionList.clear()
                         val intent = Intent(applicationContext, LoginActivity::class.java)
                         startActivity(intent)
                     }

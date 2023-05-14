@@ -49,6 +49,7 @@ import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import java.io.IOException
 
 
 class PlacesMapFragment() : Fragment(), OnMapReadyCallback,
@@ -328,39 +329,50 @@ class PlacesMapFragment() : Fragment(), OnMapReadyCallback,
                 recommendationPlacesList.clear()
 
                 lifecycleScope.launch(Dispatchers.IO){
-
-                    if (postRecommendation != null){
+                    if (postRecommendation != null) {
                         val postResponse = service.createPost(postRecommendation)
                         if (postResponse != null) {
-                            for(response in postResponse){
+                            for (response in postResponse) {
                                 recommendationResponseList.add(response.docId)
-
                                 Log.d(ContentValues.TAG, "Post Response: ${response.docId}");
-
                             }
-                            for(id in recommendationResponseList) {
+                            for (id in recommendationResponseList) {
                                 Log.d(
                                     ContentValues.TAG,
                                     "RecommendationResponseList: ${id}"
                                 );
                             }
                             placesActivity.runOnUiThread {
-                                Log.d(ContentValues.TAG, "openRecommendationView() attempting to open");
+                                Log.d(
+                                    ContentValues.TAG,
+                                    "openRecommendationView() attempting to open"
+                                );
                                 openRecommendationView()
-
+                            }
+                            Log.d(ContentValues.TAG, "Attempting to call getRecommendPlaces()");
+                        }else{
+                            placesActivity.runOnUiThread{
+                                Toast.makeText(
+                                    context,
+                                    "No Recommendations Found",
+                                    Toast.LENGTH_SHORT
+                                ).show()
                             }
 
-                            Log.d(ContentValues.TAG, "Attempting to call getRecommendPlaces()");
-
-                        }else{
-                            Toast.makeText(context, "No Response from Recommendation API", Toast.LENGTH_SHORT).show()
                         }
+                    } else {
+                        Toast.makeText(
+                            context,
+                            "No Request Body Found",
+                            Toast.LENGTH_SHORT
+                        ).show()
                     }
                 }//end lifeCycleScope
             }//end setOnClickListener()
 
             TransitionManager.beginDelayedTransition(placeInfoLayout, AutoTransition())
             placeInfoLayout.visibility = View.VISIBLE
+            closeRecommendationView()
 
             true
         }//end onMarkerClicked()
@@ -412,12 +424,9 @@ class PlacesMapFragment() : Fragment(), OnMapReadyCallback,
                         }
                     }
 
-                    val openingHoursTextArray: ArrayList<String> = ArrayList()
+                    var openingHoursTextArray: ArrayList<String> = ArrayList()
                     if(isDocumentNull(result, "openingHoursText")){
-                        val openingHoursText = result.data!!.get("openingHoursText") as ArrayList<String>
-                        for(openingHours in openingHoursText){
-                            openingHoursTextArray.add(openingHoursText.toString())
-                        }
+                        openingHoursTextArray = result.data!!.get("openingHoursText") as ArrayList<String>
                     }
 
                     var rating: Double? = null
@@ -449,17 +458,6 @@ class PlacesMapFragment() : Fragment(), OnMapReadyCallback,
 
 
 
-    private fun updateRecommendations() {
-        Log.d(ContentValues.TAG, "updateRecommendations() called");
-        Log.d(ContentValues.TAG, "Update: recommendationPlacesList -> ${recommendationPlacesList}");
-
-        adapter.notifyDataSetChanged()
-        Log.d(ContentValues.TAG, "adapter itemCount -> ${adapter.itemCount}");
-
-        Log.d(ContentValues.TAG, "openRecommendationView() attempting to open");
-        openRecommendationView()
-    }//end displayRecommendations()
-
     private fun initRecommendationRecyclerView() {
         Log.d(ContentValues.TAG, "initRecommendationRecyclerView() called");
         recommendationRecyclerView.layoutManager = LinearLayoutManager(this.placesActivity)
@@ -468,7 +466,7 @@ class PlacesMapFragment() : Fragment(), OnMapReadyCallback,
         recommendationRecyclerView.adapter = adapter
         adapter.setOnItemClickListener(object: RecommendationAdapter.onItemClickListener{
             override fun onItemClick(position: Int) {
-                Log.d(ContentValues.TAG, "recommendationPlacesList position: $position -> ${recommendationPlacesList[position]}");
+                //Log.d(ContentValues.TAG, "recommendationPlacesList position: $position -> ${recommendationPlacesList[position]}");
                 locateRecommendation(position)
             }
 
@@ -491,6 +489,7 @@ class PlacesMapFragment() : Fragment(), OnMapReadyCallback,
 
         addRecommendBtn.visibility = View.VISIBLE
         cancelRecommendBtn.visibility = View.VISIBLE
+        closeRecommendationView()
 
         var placeDetailsMap = hashMapOf<Any, Any>()
         val name: String? = recommendationPlacesList[position].name
@@ -508,10 +507,19 @@ class PlacesMapFragment() : Fragment(), OnMapReadyCallback,
         placeDetailsMap["coordinates"] = coordinates as GeoPoint
         placeDetailsMap["types"] = types as ArrayList<String>
         placeDetailsMap["address"] = address.toString()
-        placeDetailsMap["openingHours"] = openingHours as ArrayList<Any>
-        placeDetailsMap["openingHoursText"] = openingHoursText as ArrayList<String>
-        placeDetailsMap["rating"] = rating as Double
-        placeDetailsMap["totalRatings"] = totalRatings as Int
+        if (openingHours != null) {
+            placeDetailsMap["openingHours"] = openingHours
+        }
+        if(openingHoursText != null){
+            placeDetailsMap["openingHoursText"] = openingHoursText
+        }
+        if(rating != null){
+            placeDetailsMap["rating"] = rating
+        }
+        if(totalRatings != null){
+            placeDetailsMap["totalRatings"] = totalRatings
+        }
+
 
         val placeDetail: PlaceDetails = PlaceDetails(null, name, placeId, coordinates, types, address, openingHours, openingHoursText, rating, totalRatings)
 
@@ -523,28 +531,31 @@ class PlacesMapFragment() : Fragment(), OnMapReadyCallback,
         )
 
         addRecommendBtn.setOnClickListener {
+            var isPlaceAdded: Boolean = false
             for(place in placeDetailsArray){
                 if(place.placeId == placeId){
+                    isPlaceAdded = true
                     Toast.makeText(context, "Place Already Added", Toast.LENGTH_SHORT).show()
                     addRecommendBtn.visibility = View.INVISIBLE
                     cancelRecommendBtn.visibility = View.INVISIBLE
-                }else{
-                    tripsReference.collection("places").add(placeDetailsMap)
-                        .addOnSuccessListener {
-                            Log.d(ContentValues.TAG, "Place Added Successfully")
-                            Toast.makeText(context, "Place Added Successfully", Toast.LENGTH_SHORT).show()
-                            placeDetailsArray.add(placeDetail)
-                            addRecommendBtn.visibility = View.INVISIBLE
-                            cancelRecommendBtn.visibility = View.INVISIBLE
-                        }
-                        .addOnFailureListener {
-                            Log.d(ContentValues.TAG, "Could Not Add Place")
-
-                        }
                 }
-            }
+            }//end for
+            if(!isPlaceAdded){
+                tripsReference.collection("places").add(placeDetailsMap)
+                    .addOnSuccessListener {
+                        Log.d(ContentValues.TAG, "Place Added Successfully")
+                        Toast.makeText(context, "Place Added Successfully", Toast.LENGTH_SHORT).show()
+                        placeDetailsArray.add(placeDetail)
+                        addRecommendBtn.visibility = View.INVISIBLE
+                        cancelRecommendBtn.visibility = View.INVISIBLE
+                    }
+                    .addOnFailureListener {
+                        Log.d(ContentValues.TAG, "Could Not Add Place")
 
-        }
+                    }
+            }//end if
+
+        }//end addBtn.onClickListener
 
         cancelRecommendBtn.setOnClickListener {
             newPlaceMarker?.remove()
@@ -553,7 +564,7 @@ class PlacesMapFragment() : Fragment(), OnMapReadyCallback,
             cancelRecommendBtn.visibility = View.INVISIBLE
         }
 
-    }
+    }//end locateRecommendation()
 
     private fun isDocumentNull(docRef: DocumentSnapshot, field:String): Boolean{
         return docRef.data?.get(field) != null

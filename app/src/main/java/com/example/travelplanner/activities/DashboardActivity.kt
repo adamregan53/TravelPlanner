@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.util.Log
 import androidx.cardview.widget.CardView
 import com.example.travelplanner.R
+import com.example.travelplanner.data.SharedData
 import com.example.travelplanner.databinding.ActivityDashboardBinding
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
@@ -49,6 +50,8 @@ class DashboardActivity : DrawerBaseActivity(){
 
         logoutCard.setOnClickListener {
             auth.signOut()
+            SharedData.tripsList.clear()
+            SharedData.tripSuggestionList.clear()
             val intent = Intent(applicationContext, LoginActivity::class.java)
             startActivity(intent)
         }

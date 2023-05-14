@@ -14,8 +14,7 @@ data class TripDetails(
     var locationRef: String,
     var name: String,
     var startDate: Timestamp,
-    var types: ArrayList<String>?,
-    var utcOffset: Int?
+    var types: ArrayList<String>?
 
 
 )
