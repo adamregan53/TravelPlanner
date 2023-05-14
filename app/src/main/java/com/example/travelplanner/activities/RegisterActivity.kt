@@ -66,7 +66,7 @@ class RegisterActivity : AppCompatActivity() {
                 if (task.isSuccessful) {
                     // Sign in success, update UI with the signed-in user's information
                     Toast.makeText(baseContext, "Success", Toast.LENGTH_SHORT).show()
-                    val intent = Intent(this, TripsActivity::class.java)
+                    val intent = Intent(this, DashboardActivity::class.java)
 
                     //add user to firestore database
                     val userId = auth.currentUser?.uid

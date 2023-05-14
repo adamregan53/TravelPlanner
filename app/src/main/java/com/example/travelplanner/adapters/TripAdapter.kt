@@ -9,6 +9,7 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.example.travelplanner.R
 import com.example.travelplanner.data.TripDetails
+import java.text.SimpleDateFormat
 
 class TripAdapter(private val tripsList : ArrayList<TripDetails>) : RecyclerView.Adapter<TripAdapter.MyViewHolder>() {
 
@@ -31,7 +32,19 @@ class TripAdapter(private val tripsList : ArrayList<TripDetails>) : RecyclerView
         Log.d(TAG, "onBindViewHolder: position " + position);
         val currentTrip = tripsList[position]
         holder.tripTitle.text = currentTrip.name
+
+        Log.d(TAG, "onBindViewHolder: startDate seconds: " + currentTrip.startDate.seconds);
+        val currentStartDate = getDateString(currentTrip.startDate.seconds)
+        holder.startDate.text = currentStartDate
+
+        Log.d(TAG, "onBindViewHolder: endDate seconds: " + currentTrip.endDate.seconds);
+        val currentEndDate = getDateString(currentTrip.endDate.seconds)
+        holder.endDate.text = currentEndDate
+
     }//end onBindViewHolder()
+
+    private val sdf = SimpleDateFormat("dd/MM/yyyy HH:mm")
+    private fun getDateString(time: Long) : String = sdf.format(time * 1000)
 
     override fun getItemCount(): Int {
         return tripsList.size
@@ -40,7 +53,8 @@ class TripAdapter(private val tripsList : ArrayList<TripDetails>) : RecyclerView
     class MyViewHolder(itemView: View, listener: onItemClickListener): RecyclerView.ViewHolder(itemView){
 
         val tripTitle: TextView = itemView.findViewById(R.id.trip_title)
-        val tripDetail: TextView = itemView.findViewById(R.id.trip_detail)
+        val startDate: TextView = itemView.findViewById(R.id.trip_start_date)
+        val endDate: TextView = itemView.findViewById(R.id.trip_end_date)
 
         init {
             itemView.setOnClickListener{

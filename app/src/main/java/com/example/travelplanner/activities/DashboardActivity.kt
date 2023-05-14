@@ -1,8 +1,12 @@
 package com.example.travelplanner.activities
 
 import android.content.ContentValues
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
+import androidx.cardview.widget.CardView
+import com.example.travelplanner.R
+import com.example.travelplanner.data.SharedData
 import com.example.travelplanner.databinding.ActivityDashboardBinding
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
@@ -18,13 +22,39 @@ class DashboardActivity : DrawerBaseActivity(){
     private lateinit var auth: FirebaseAuth
     private lateinit var currentUserId: String
 
+    private lateinit var tripsCard: CardView
+    private lateinit var profileCard: CardView
+    private lateinit var logoutCard: CardView
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         activityDashboardBinding = ActivityDashboardBinding.inflate(layoutInflater)
         allocationActivityTitle("Dashboard")
         setContentView(activityDashboardBinding.root)
 
+        auth = Firebase.auth
 
+        tripsCard = findViewById(R.id.dashboard_trips)
+        profileCard = findViewById(R.id.dashboard_profile)
+        logoutCard = findViewById(R.id.dashboard_logout)
+
+        tripsCard.setOnClickListener {
+            val intent = Intent(applicationContext, TripsActivity::class.java)
+            startActivity(intent)
+        }
+
+        profileCard.setOnClickListener {
+            val intent = Intent(applicationContext, ProfileActivity::class.java)
+            startActivity(intent)
+        }
+
+        logoutCard.setOnClickListener {
+            auth.signOut()
+            SharedData.tripsList.clear()
+            SharedData.tripSuggestionList.clear()
+            val intent = Intent(applicationContext, LoginActivity::class.java)
+            startActivity(intent)
+        }
 
     }//end onCreate()
 
